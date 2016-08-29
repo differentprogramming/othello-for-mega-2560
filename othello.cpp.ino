@@ -10,6 +10,7 @@
 char *gets(char * b,size_t maxlen)
 {
   int len=0;
+  while(Serial.available()==0) delay(100);
   while (Serial.available()!=0 && len<(int)maxlen-1){
     b[len++]=Serial.read();
     delay(2);//I seem to have to delay enough to get the next byte at 9600 baud
@@ -17,7 +18,7 @@ char *gets(char * b,size_t maxlen)
   b[len]=0;
   return b;
 }
-int blink_counter = 200;
+int blink_counter = 20000;
 bool blink_state=false;
 void blink()
 {
@@ -25,7 +26,7 @@ void blink()
     if (blink_state) digitalWrite(13, LOW);
     else digitalWrite(13, HIGH);
     blink_state = !blink_state;
-    blink_counter = 200;
+    blink_counter = 20000;
   }
 }
 
@@ -724,9 +725,10 @@ bool fast_move(Square *&undo, int pos, Square color, Square *board)
     Move<9>::move(u, pos, color, other, r) |
     Move<-9>::move(u, pos, color, other, r)))
   {
-    *u++ = u - undo;
+    Square t = u-undo;
+    *u++ = t;
     *u++ = pos;
-    Serial.print(F("Record undo at: "));Serial.print(pos); Serial.print(F(" len: "));Serial.println(u-undo);
+//    Serial.print(F("Record undo at: "));Serial.print(pos); Serial.print(F(" len: "));Serial.println(u-undo);
     board[pos] = color;
     undo = u;
     return true;
@@ -756,7 +758,9 @@ bool move(Square *&undo, int pos, Square color, Square *board, const int *direct
     }
   }
   if (u != undo) {
-    *u++ = u - undo;
+    Square t =  u - undo;
+  
+    *u++ = t;
     *u++ = pos;
     board[pos] = color;
     undo = u;
@@ -766,6 +770,8 @@ bool move(Square *&undo, int pos, Square color, Square *board, const int *direct
 }
 void dump_undos()
 {
+ 
+  return;
   Square *u = undo_buffer;
   Serial.println(F("***Undo dump"));
   while (u!=&undo_buffer_array[0] && u!=&undo_buffer_array[1] && u!=u!=&undo_buffer_array[-1] ){
@@ -787,23 +793,23 @@ void dump_undos()
 void undo(Square *&undo, Square *board)
 {
   if (undo_buffer == &undo_buffer_array[0]) {
-    Serial.println(F("undo nothing"));
+//    Serial.println(F("undo nothing"));
     return;
   }
   if (undo != undo_buffer){
-    Serial.println(F("*********************************oh shit*******************"));
-    abort();
+//    Serial.println(F("*********************************oh shit*******************"));
+//    abort();
   }
   Square *u = undo;
-  Serial.print(F("undo at "));
-  Serial.println(*(u-1));
+//  Serial.print(F("undo at "));
+//  Serial.println(*(u-1));
   board[*--u] = Empty;
   int num = *--u;
-  Serial.print(num);
-  Serial.println(F(" flips"));
+//  Serial.print(num);
+//  Serial.println(F(" flips"));
   while (num-- > 0) {
-    Serial.print(F(" flip"));
-    Serial.println(*u);
+//    Serial.print(F(" flip"));
+//    Serial.println(*u);
   
     board[*--u] ^= (White + Black);
   }
@@ -1013,7 +1019,7 @@ public:
 //    delay(300);
 
     for (int p = 11;p <= 88;++p) if (move(undo_buffer, p, color, true)) return true;
-    Serial.println(F("no moves"));
+//    Serial.println(F("no moves"));
 //    delay(300);
     return false;
   }
@@ -1058,7 +1064,7 @@ public:
       if (command) strcpy(buf, command);
       else gets(buf, sizeof(buf) - 1);
       int i = -1;
-      atoi(buf);
+      i=atoi(buf);
       if (buf[0] == 'p') return;
 
       if (buf[0] == 'a') {
@@ -1404,11 +1410,11 @@ int Board::find_move(int depth, Square color, bool use_move_count)
   else alphabeta(moveAt, depth, -INT_MAX, INT_MAX, color, color, use_move_count);
   return moveAt;
 #else
-Serial.println(F("before find empty"));
+//Serial.println(F("before find empty"));
   int empty_depth = valuator.find_empty(board);
-Serial.println(F("after find empty"));
+//Serial.println(F("after find empty"));
   int moveAt = 0;
-  if (empty_depth < 15) {
+  if (empty_depth < 13) {
     Serial.println(F("endgame "));
     if (in_endgame == false) {
       in_endgame = true;
@@ -1424,9 +1430,9 @@ Serial.println(F("after find empty"));
   //prime the endgame refutation
   //  int endgame_reflect = 48 - empty_depth;
   //  if (endgame_reflect>0 ) endgame_alphabeta(moveAt, endgame_reflect, -INT_MAX, INT_MAX, color, color, false);
-Serial.println(F("before find collect_primary_alphabeta"));
+//Serial.println(F("before find collect_primary_alphabeta"));
   if (collect_primary_alphabeta(NUM_PRIMARY, NUM_PRIMARY_MAX, move_collection, depth - 2, color, color, use_move_count)) {
-Serial.println(F("after find collect_primary_alphabeta"));
+//Serial.println(F("after find collect_primary_alphabeta"));
 
     valuator.remove_dangerous_moves(move_collection, board, color);
     //undo(undo_buffer, board);
@@ -1496,7 +1502,6 @@ int32_t Board::endgame_alphabeta(int &move_at, int depth, int32_t alpha, int32_t
       return endgame_alphabeta(inner_move, depth, alpha, beta, other_color(color), root_color, true);//passed
     }
     move_at = at;
-    return v;
   }
 
 };
@@ -1517,10 +1522,10 @@ bool Board::collect_primary_alphabeta(int32_t collect, int32_t collect_max, int3
     if (color == root_color) { //maximizing
       int32_t v = -INT_MAX;
       while (next_move_not_in(move_collection, move_number, at, color, depth)) {
-dump_undos();
-print();
+//dump_undos();
+//print();
         int32_t n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);
-dump_undos();
+//dump_undos();
         if (n > v) {
           //just take bonehead move out of the list if there's an alt
           //* 
@@ -1541,9 +1546,9 @@ dump_undos();
       }
       if (v == -INT_MAX) {
         //        move_collection[current_move_pos] = 0;
- dump_undos();       
+// dump_undos();       
         v = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);//passed
-dump_undos();
+//dump_undos();
         continue;
       }
       continue;
@@ -1597,7 +1602,7 @@ int32_t Board::movelist_alphabeta(int32_t* move_collection, int &move_at, int de
     while (++move_list_counter <= move_collection[0]) {
       at = move_collection[move_list_counter];
       bool moved = move(undo_buffer, at, color);
-dump_undos();      
+//dump_undos();      
       int32_t n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);
       if (n > v) {
         v = n;
@@ -1624,7 +1629,7 @@ dump_undos();
     while (++move_list_counter <= move_collection[0]) {
       at = move_collection[move_list_counter];
       bool moved = move(undo_buffer, at, color);
-dump_undos();      
+//dump_undos();      
       int32_t n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);
       if (n < v) {
         v = n;
@@ -1657,7 +1662,7 @@ int32_t Board::alphabeta(int &move_at, int depth, int32_t alpha, int32_t beta, S
 #else
   if (depth <= 0 || end_of_game()) {
 #endif
-    return valuator.find_value(board, root_color, use_move_count, true);//display
+    return valuator.find_value(board, root_color, use_move_count, false);//display
   }
   int at, move_number = 0;
   int inner_move;
@@ -1665,8 +1670,8 @@ int32_t Board::alphabeta(int &move_at, int depth, int32_t alpha, int32_t beta, S
     int32_t v = -INT_MAX;
     while (next_move(move_number, at, color, depth)) {
 dump_undos();
-Serial.print(F("alphabeta "));Serial.println(depth);
-    print();
+//Serial.print(F("alphabeta "));Serial.println(depth);
+//    print();
       int32_t *to_store, n;
       //{}{}{} rewrite to fill only on no cut wait would that have to be 
       //recursive?  Needs more research
@@ -1675,7 +1680,7 @@ Serial.print(F("alphabeta "));Serial.println(depth);
       //      }
       //      else {
       n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);
-dump_undos();
+//dump_undos();
       //        *to_store = n;
       //      }
       if (n > v) {
@@ -1701,16 +1706,16 @@ dump_undos();
   else {//minimizing
     int32_t v = INT_MAX;
     while (next_move(move_number, at, color, depth)) {
-Serial.print(F("alphabeta "));Serial.println(depth);
-    print();
-dump_undos();
+//Serial.print(F("alphabeta "));Serial.println(depth);
+//    print();
+//dump_undos();
       int32_t *to_store, n;
       //      if (TranspositionEntry::find_and_fill(to_store, board, depth)) {
       //        n = *to_store;
       //      }
       //      else {
       n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);
-dump_undos();
+//dump_undos();
       //        *to_store = n;
       //      }
       if (n < v) {
@@ -1763,7 +1768,7 @@ void setup()
       black_passed = true;
     }
       else {
-        b.input(Black, "b5");
+        b.input(Black, "b6");
       black_passed = false;
     }
     //increment_killers();
@@ -1777,7 +1782,7 @@ void setup()
       white_passed = true;
     }
     else {
-      b.input(White, "b5");
+      b.input(White);
       white_passed = false;
     }
     //increment_killers();
