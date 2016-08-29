@@ -543,7 +543,7 @@ const int shifts[] = { -1,0,-1,-1,-1,-1,-1,-1,-1,2,4,6 };
 Square undo_buffer_array[64 * 10];
 Square *undo_buffer = &undo_buffer_array[0];
 
-typedef int ValuationArray[100];
+typedef int32_t ValuationArray[100];
 ValuationArray aValuationArray;
 
 
@@ -1062,7 +1062,7 @@ public:
       else Serial.print(F("Black's"));
       Serial.print(F(" move (p for pass, u undo, a[n] auto, b[n] alt auto):"));
       if (command) strcpy(buf, command);
-      else gets(buf, sizeof(buf) - 1);
+      else { gets(buf, sizeof(buf) - 1); Serial.println(F("")); }
       int i = -1;
       i=atoi(buf);
       if (buf[0] == 'p') return;
@@ -1177,16 +1177,16 @@ public:
   }
   int find_value(BoardArray in, Square root_color, bool use_move_count, bool display)
   {
-    for (int i = 11;i <= 88;++i) aValuationArray[i] = 0;
+    for (int8_t i = 11;i <= 88;++i) aValuationArray[i] = 0;
 
     CompressedBoard cbs;
     int *store_value_in_table;
 
-    for (int i = 0;i < 8; i += 2) {
+    for (int8_t i = 0;i < 8; i += 2) {
       BoardLine c = 0;
       BoardLine c2 = 0;
 
-      for (int j = Valuations[i].pos, j2 = Valuations[1 + i].pos, k = 1;k <= Valuations[i].len;++k, j += Valuations[i].dir, j2 += Valuations[i].dir) {
+      for (int8_t j = Valuations[i].pos, j2 = Valuations[1 + i].pos, k = 1;k <= Valuations[i].len;++k, j += Valuations[i].dir, j2 += Valuations[i].dir) {
         c = (c << 2) + in[j];
         c2 = (c2 << 2) + in[j2];
 
@@ -1197,7 +1197,7 @@ public:
     }
 
 
-    for (int i = 0;Valuations[i].pos; i += 2) {
+    for (int8_t i = 0;Valuations[i].pos; i += 2) {
       BoardLine c;
       BoardLine c2;
       if (i < 8) {
@@ -1207,16 +1207,16 @@ public:
       else {
         c = 0;
         c2 = 0;
-        for (int j = Valuations[i].pos, j2 = Valuations[1 + i].pos, k = 1;k <= Valuations[i].len;++k, j = j + Valuations[i].dir, j2 = j2 + Valuations[1 + i].dir) {
+        for (int8_t j = Valuations[i].pos, j2 = Valuations[1 + i].pos, k = 1;k <= Valuations[i].len;++k, j = j + Valuations[i].dir, j2 = j2 + Valuations[1 + i].dir) {
           c = (c << 2) + in[j];
           c2 = (c2 << 2) + in[j2];
         }
         c = safety(Valuations[i].len - 1, compress3(c));
         c2 = safety(Valuations[i].len - 1, compress3(c2));
       }
-      int s = shifts[Valuations[i].dir];
-      int s2 = shifts[Valuations[1 + i].dir];
-      for (int j = Valuations[i].pos + Valuations[i].dir*(Valuations[i].len - 1),
+      int8_t s = shifts[Valuations[i].dir];
+      int8_t s2 = shifts[Valuations[1 + i].dir];
+      for (int8_t j = Valuations[i].pos + Valuations[i].dir*(Valuations[i].len - 1),
         j2 = Valuations[1 + i].pos + Valuations[1 + i].dir*(Valuations[i].len - 1),
         k = 1;k <= Valuations[i].len;++k,
         j = j - Valuations[i].dir,
@@ -1248,8 +1248,8 @@ public:
     }
     if (use_move_count) {
       int32_t white_moves = 0, black_moves = 0;
-      for (int p = 11;p <= 88;++p) if (fast_move_check(p, White, in))white_moves += 7;
-      for (int p = 11;p <= 88;++p) if (fast_move_check(p, Black, in))black_moves += 7;
+      for (int8_t p = 11;p <= 88;++p) if (fast_move_check(p, White, in))white_moves += 7;
+      for (int8_t p = 11;p <= 88;++p) if (fast_move_check(p, Black, in))black_moves += 7;
 
       /*
       for (int p = 11;p <= 88;++p) {
@@ -1296,14 +1296,14 @@ public:
 
 
     const int8_t corner_fix2[] = { 11,18,81,88 };
-    for (int i = 0;i < 4;++i) {
+    for (int8_t i = 0;i < 4;++i) {
       if (board[corner_fix2[i]] == White) sum += 1800; else sum -= 1800;
     }
 
 
     //setup scoring
     const int8_t corner_fix4[] = { 11,12,22,21,18,17,27,28,81,71,72,82,88,78,77,87 };
-    for (int i = 0;i < 16;i += 4) {
+    for (int8_t i = 0;i < 16;i += 4) {
       if (board[corner_fix4[i]] == Empty) {
         if (corner_fix4[i + 1] == White) sum -= 450;
         else if (corner_fix4[i + 1] == White) sum += 450;
