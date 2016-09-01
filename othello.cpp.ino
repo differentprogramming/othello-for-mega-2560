@@ -15,20 +15,21 @@
 
 #define __min(x,y) (x)<(y)?(x):(y)
 
-char *gets(char * b,size_t maxlen)
+char *gets(char * b, size_t maxlen)
 {
-  int len=0;
-  while(Serial.available()==0) delay(100);
-  while (Serial.available()!=0 && len<(int)maxlen-1){
-    b[len++]=Serial.read();
+  int len = 0;
+  while (Serial.available() == 0) delay(100);
+  while (Serial.available() != 0 && len<(int)maxlen - 1) {
+    b[len++] = Serial.read();
     delay(2);//I seem to have to delay enough to get the next byte at 9600 baud
   }
-  b[len]=0;
+  b[len] = 0;
   Serial.print(b);
   return b;
 }
+
 int blink_counter = 1250;
-bool blink_state=false;
+bool blink_state = false;
 void blink()
 {
   if (blink_counter--<1) {
@@ -110,7 +111,7 @@ void init_compress()
 //reduce cache pressure by converting base 3 index to compressed form
 inline Safety compress3(BoardLine c)
 {
-//  return compress_a[c & 255] + compress_b[c >> 8];
+  //  return compress_a[c & 255] + compress_b[c >> 8];
   return pgm_read_word(&compress_a[c & 255]) + pgm_read_word(&compress_b[c >> 8]);
 }
 
@@ -628,8 +629,8 @@ public:
   static int move(Square *&undo, int pos, Square color, Square other, Square *r)
   {
 
-//  Serial.print(F("move "));Serial.print(pos);Serial.print(F(" "));;Serial.println(color);
-  //delay(2000);
+    //  Serial.print(F("move "));Serial.print(pos);Serial.print(F(" "));;Serial.println(color);
+    //delay(2000);
     if (r[DIR] == other) {
       if (r[2 * DIR] == other) {
         if (r[3 * DIR] == other) {
@@ -645,7 +646,7 @@ public:
                   undo[1] = 2 * DIR + pos;
                   undo[0] = DIR + pos;
                   undo += 6;
-    blink();
+                  blink();
                   return 1;
                 }
               }
@@ -657,7 +658,7 @@ public:
                 undo[1] = 2 * DIR + pos;
                 undo[0] = DIR + pos;
                 undo += 5;
-    blink();
+                blink();
                 return 1;
               }
 
@@ -669,7 +670,7 @@ public:
               undo[1] = 2 * DIR + pos;
               undo[0] = DIR + pos;
               undo += 4;
-    blink();
+              blink();
               return 1;
             }
           }
@@ -679,7 +680,7 @@ public:
             undo[1] = 2 * DIR + pos;
             undo[0] = DIR + pos;
             undo += 3;
-    blink();
+            blink();
             return 1;
           }
         }
@@ -688,7 +689,7 @@ public:
           undo[1] = 2 * DIR + pos;
           undo[0] = DIR + pos;
           undo += 2;
-    blink();
+          blink();
           return 1;
         }
       }
@@ -697,7 +698,7 @@ public:
         r[DIR] = color;
         undo[0] = DIR + pos;
         undo += 1;
-    blink();
+        blink();
         return 1;
       }
     }
@@ -789,15 +790,15 @@ void undo(Square *&undo, Square *board)
 
 #ifdef MEGA
 static const uint8_t lru[64] = {
-    11,18,81,88,
-    13,16,38,68,86,83,61,31,
-    14,15,48,58,84,85,41,51,
-    33,34,35,36,43,44,45,46,53,54,55,56,63,64,65,66,
-    23,24,25,26,37,47,57,67,73,74,75,76,32,42,52,62,
-    12,21,17,28,78,87,82,71,
-    22,27,77,72
-  };
- #else
+  11,18,81,88,
+  13,16,38,68,86,83,61,31,
+  14,15,48,58,84,85,41,51,
+  33,34,35,36,43,44,45,46,53,54,55,56,63,64,65,66,
+  23,24,25,26,37,47,57,67,73,74,75,76,32,42,52,62,
+  12,21,17,28,78,87,82,71,
+  22,27,77,72
+};
+#else
 #define NUM_LRUS 7
 static uint8_t blacklru[NUM_LRUS][64] = { {
     11,18,81,88,
@@ -915,21 +916,21 @@ static uint8_t whitelru[NUM_LRUS][64] = { {
   } };
 #endif
 #ifndef MEGA
-  void increment_killers()
-  {
-    
-    for (int i = 1;i < 20;++i) {
-      if (whitelru[i>>1][0] != 11 && whitelru[i>>1][1] != 18) memcpy(&whitelru[(i - 1)>>1][0], &whitelru[i>>1][0], 64 * sizeof(int));
-      if (blacklru[i>>1][0] != 11 && blacklru[i>>1][1] != 18) memcpy(&blacklru[(i - 1)>>1][0], &blacklru[i>>1][0], 64 * sizeof(int));
-    }
+void increment_killers()
+{
+
+  for (int i = 1;i < 20;++i) {
+    if (whitelru[i >> 1][0] != 11 && whitelru[i >> 1][1] != 18) memcpy(&whitelru[(i - 1) >> 1][0], &whitelru[i >> 1][0], 64 * sizeof(int));
+    if (blacklru[i >> 1][0] != 11 && blacklru[i >> 1][1] != 18) memcpy(&blacklru[(i - 1) >> 1][0], &blacklru[i >> 1][0], 64 * sizeof(int));
   }
-  void propagate_lrus()
-  {
-    for (int i = 2;i < NUM_LRUS-2;++i) {
-      if (whitelru[i>>1][0] == 11 && whitelru[i>>1][1] == 18) memcpy(&whitelru[i>>1][0], &whitelru[(i - 2)>>1][0], 64 * sizeof(int));
-      if (blacklru[i>>1][0] == 11 && blacklru[i>>1][1] == 18) memcpy(&blacklru[i>>1][0], &blacklru[(i - 2)>>1][0], 64 * sizeof(int));
-    }
+}
+void propagate_lrus()
+{
+  for (int i = 2;i < NUM_LRUS - 2;++i) {
+    if (whitelru[i >> 1][0] == 11 && whitelru[i >> 1][1] == 18) memcpy(&whitelru[i >> 1][0], &whitelru[(i - 2) >> 1][0], 64 * sizeof(int));
+    if (blacklru[i >> 1][0] == 11 && blacklru[i >> 1][1] == 18) memcpy(&blacklru[i >> 1][0], &blacklru[(i - 2) >> 1][0], 64 * sizeof(int));
   }
+}
 #endif
 static int depth_schedule[] = { 64,64,64,64,32,16,4,4,2,1,1,1,1,1,1,1,1,1,1,1,1,1 };
 
@@ -955,7 +956,7 @@ public:
   BoardArray board;
   void print()
   {
-    char buf[]=" ";
+    char buf[] = " ";
     int b = 0, w = 0;
     const char *p = ".*Ox#";
     Serial.println(F("     1 2 3 4 5 6 7 8"));
@@ -964,7 +965,7 @@ public:
         if (i == 0 || i == 90) Serial.print(F("   "));
         else { Serial.print(F(" "));Serial.print(i / 10);Serial.print(F(" ")); }
       }
-      if (board[i]>=0 && board[i]<=4) buf[0]=p[board[i]]; else Serial.print(i);
+      if (board[i] >= 0 && board[i] <= 4) buf[0] = p[board[i]]; else Serial.print(i);
       Serial.print(buf);Serial.print(F(" "));
       if (board[i] == Black) ++b;
       else if (board[i] == White) ++w;
@@ -974,11 +975,11 @@ public:
   }
 
 
-  bool collect_primary_alphabeta(int collect, int collect_max, int * move_collection, int depth, Square color, Square root_color, bool use_move_count);
+  bool collect_primary_alphabeta(int collect, int collect_max, int * move_collection, int depth, Square color, Square root_color, bool use_move_count, int empty_left);
 
-  int32_t random_alphabeta(int curdepth, int &move_at, int depth, int32_t alpha, int32_t beta, Square color, Square root_color, bool use_move_count);
-  int32_t alphabeta(int &move_at, int depth, int32_t alpha, int32_t beta, Square color, Square root_color, bool use_move_count);
-  int32_t movelist_alphabeta(int* move_collection, int &move_at, int depth, Square color, Square root_color, bool use_move_count);
+  int32_t random_alphabeta(int curdepth, int &move_at, int depth, int32_t alpha, int32_t beta, Square color, Square root_color, bool use_move_count, int empty_left);
+  int32_t alphabeta(int &move_at, int depth, int32_t alpha, int32_t beta, Square color, Square root_color, bool use_move_count, int empty_left);
+  int32_t movelist_alphabeta(int* move_collection, int &move_at, int depth, Square color, Square root_color, bool use_move_count, int empty_left);
   int32_t endgame_alphabeta(int &move_at, int depth, int32_t alpha, int32_t beta, Square color, Square root_color, bool passed = false);
 
 
@@ -999,24 +1000,24 @@ public:
 #else
   void killer2(int move_number, Square color, int depth)
   {
- #ifndef MEGA
+#ifndef MEGA
     if (move_number == 0) return;
     uint8_t *lru;
-    
-    if (color == White)lru = whitelru[depth>>1];
-    else lru = blacklru[depth>>1];
+
+    if (color == White)lru = whitelru[depth >> 1];
+    else lru = blacklru[depth >> 1];
     int at = lru[move_number];
     for (int i = move_number - 1;i >= 0;--i) lru[i + 1] = lru[i];
     lru[0] = at;
- #endif   
+#endif   
   }
   void killer(int move_number, Square color, int depth)
   {
- #ifndef MEGA
+#ifndef MEGA
     if (move_number <= 1) return;
     uint8_t *lru;
-    if (color == White)lru = whitelru[(QUIESCENT_DEPTH + depth)>>1];
-    else lru = blacklru[(QUIESCENT_DEPTH + depth)>>1];
+    if (color == White)lru = whitelru[(QUIESCENT_DEPTH + depth) >> 1];
+    else lru = blacklru[(QUIESCENT_DEPTH + depth) >> 1];
     int at = lru[move_number];
     int a0 = lru[0];
     int a1 = lru[move_number >> 1];
@@ -1024,9 +1025,9 @@ public:
     lru[0] = at;
     lru[move_number >> 1] = a0;
     lru[move_number] = a1;
- #endif   
+#endif   
   }
- #ifndef MEGA  
+#ifndef MEGA  
   void endgame_killer(int move_number, Square color, int depth)
   {
     static int32_t countdown = 100000;
@@ -1036,8 +1037,8 @@ public:
     }
     if (move_number <= 1) return;
     uint8_t *lru;
-    if (color == White)lru = whitelru[(QUIESCENT_DEPTH + depth)>>1];
-    else lru = blacklru[(QUIESCENT_DEPTH + depth)>>1];
+    if (color == White)lru = whitelru[(QUIESCENT_DEPTH + depth) >> 1];
+    else lru = blacklru[(QUIESCENT_DEPTH + depth) >> 1];
     int at = lru[move_number];
     int a0 = lru[0];
     int a1 = lru[move_number >> 1];
@@ -1052,21 +1053,21 @@ public:
   {
     if (move_number == initialpos && !first) return false;
     int at;
-    bool skip=false;
+    bool skip = false;
     do {
       //at = (move_number >> 3) * 10 + (move_number & 7) + 11;
       //++move_number;
 #ifndef MEGA
-      if (color == White)at = whitelru[(QUIESCENT_DEPTH + depth)>>1][move_number++];
-      else at = blacklru[(QUIESCENT_DEPTH + depth)>>1][move_number++];
+      if (color == White)at = whitelru[(QUIESCENT_DEPTH + depth) >> 1][move_number++];
+      else at = blacklru[(QUIESCENT_DEPTH + depth) >> 1][move_number++];
 #else
       at = lru[move_number++];
 #endif      
       if (move_number == 64) move_number = 0;
       if (move_number == initialpos) return false;
-      if (!first && depth_schedule[curdepth]!=64) {
-        skip = ((int32_t)(rand()>>RAND_SHIFT)*64)>(((int32_t)RAND_MAX>>RAND_SHIFT)*depth_schedule[curdepth]);
-//        std::cout << skip << std::endl;
+      if (!first && depth_schedule[curdepth] != 64) {
+        skip = ((int32_t)(rand() >> RAND_SHIFT) * 64)>(((int32_t)RAND_MAX >> RAND_SHIFT)*depth_schedule[curdepth]);
+        //        std::cout << skip << std::endl;
       }
       if (skip) continue;
       if (move(undo_buffer, at, color)) break;
@@ -1085,8 +1086,8 @@ public:
       //at = (move_number >> 3) * 10 + (move_number & 7) + 11;
       //++move_number;
 #ifndef MEGA
-      if (color == White)at = whitelru[(QUIESCENT_DEPTH + depth)>>1][move_number++];
-      else at = blacklru[(QUIESCENT_DEPTH + depth)>>1][move_number++];
+      if (color == White)at = whitelru[(QUIESCENT_DEPTH + depth) >> 1][move_number++];
+      else at = blacklru[(QUIESCENT_DEPTH + depth) >> 1][move_number++];
 #else
       at = lru[move_number++];
 #endif      
@@ -1097,7 +1098,7 @@ public:
 
   bool endgame_next_move(int &move_number, int &move_at, Square color, int depth)
   {
-//    Serial.print("endgame_next_move\nmove_number ");Serial.print(move_number);Serial.print(" color ");Serial.print(color);Serial.print(" depth ");Serial.println(depth);
+    //    Serial.print("endgame_next_move\nmove_number ");Serial.print(move_number);Serial.print(" color ");Serial.print(color);Serial.print(" depth ");Serial.println(depth);
     if (move_number > 63) return false;
     int at;
     do {
@@ -1105,20 +1106,20 @@ public:
       //at = (move_number >> 3) * 10 + (move_number & 7) + 11;
       //++move_number;
 #ifndef MEGA
-      if (color == White){
-        at = whitelru[(QUIESCENT_DEPTH + depth)>>1][move_number++];
-//        Serial.print("\nwhite lru");
+      if (color == White) {
+        at = whitelru[(QUIESCENT_DEPTH + depth) >> 1][move_number++];
+        //        Serial.print("\nwhite lru");
       }
       else {
-        at = blacklru[(QUIESCENT_DEPTH + depth)>>1][move_number++];
-//        Serial.print("\nblack lru");
+        at = blacklru[(QUIESCENT_DEPTH + depth) >> 1][move_number++];
+        //        Serial.print("\nblack lru");
       }
 #else
       at = lru[move_number++];
 #endif      
-//    Serial.print(" at = ");Serial.println(at);
+      //    Serial.print(" at = ");Serial.println(at);
     } while (!move(undo_buffer, at, color));
-//    Serial.println("Move found!");
+    //    Serial.println("Move found!");
     move_at = at;
     return true;
   }
@@ -1184,11 +1185,11 @@ public:
       Serial.println("");
 
       int i = -1;
-      i=atoi(buf);
+      i = atoi(buf);
       if (buf[0] == 'p') return;
 
       if (buf[0] == 'a') {
-        int m = find_move(buf[1] - '0', color, false,false);
+        int m = find_move(buf[1] - '0', color, false, false);
         Serial.print(F("move at "));Serial.println(m);
         if (!move(undo_buffer, m, color)) {
           Serial.println(F("pass"));
@@ -1198,7 +1199,7 @@ public:
       }
       if (buf[0] == 'b') {
         int m = find_move(buf[1] - '0', color, true, false);
-        Serial.print(F("move at "));Serial.println( m);
+        Serial.print(F("move at "));Serial.println(m);
         if (!move(undo_buffer, m, color)) {
           Serial.println(F("pass."));
         }
@@ -1206,7 +1207,7 @@ public:
 
       }
       if (buf[0] == 'c') {
-        int m = find_move(buf[1] - '0', color, true,true);
+        int m = find_move(buf[1] - '0', color, true, true);
         Serial.print(F("move at "));Serial.println(m);
         if (!move(undo_buffer, m, color)) {
           Serial.println(F("pass."));
@@ -1272,10 +1273,6 @@ public:
   }
   ~Valuator() {
   }
-  bool move(Square *&undo, int pos, Square color, bool check = false) {
-    return ::move(undo, pos, color, board, LineDirections, check);
-
-  }
   void undo(Square *&undo)
   {
     ::undo(undo, board);
@@ -1313,8 +1310,118 @@ public:
     if (root_color == Black) return -sum;
     return sum;
   }
-  int find_value(BoardArray in, Square root_color, bool use_move_count, bool display)
+  int early_find_value(BoardArray in, Square root_color, bool use_move_count, bool display)
   {
+    int32_t sum = 0;
+    static int intrans[] = { 0,2,-2,0,0 };
+    for (int i = 11;i <= 88;++i) sum += Values[aValuationArray[i]] + intrans[in[i]];
+    if (display) {
+      const char *p = ".*Ox#";
+      Serial.println(F("          1      2      3      4      5      6      7      8"));
+      for (int i = 0;i < 100;++i) {
+        if (i % 10 == 0) {
+          if (i == 0 || i == 90) Serial.print(F("   "));
+          else { Serial.print(F(" "));Serial.print(i / 10);Serial.print(F(" ")); }
+        }
+        Serial.print( //aValuationArray[i],
+          Values[aValuationArray[i]] + intrans[in[i]]);Serial.print(p[in[i]]);Serial.print(F(" "));
+        if (i % 10 == 9) Serial.println(F(""));
+      }
+    }
+    int32_t white_moves = 0, black_moves = 0;
+    for (int8_t p = 11;p <= 88;++p) if (fast_move_check(p, White, in))white_moves += 7;
+    for (int8_t p = 11;p <= 88;++p) if (fast_move_check(p, Black, in))black_moves += 7;
+
+    /*
+    for (int p = 11;p <= 88;++p) {
+    bool m = fast_move_check(p, White, in);
+    assert(m ==
+    ::move(undo_buffer, p, White, in, Directions, true));
+
+    if (m) {
+    white_moves += 7;
+    }
+    }
+    for (int p = 11;p <= 88;++p) {
+    bool m = fast_move_check(p, Black, in);
+    assert(m == ::move(undo_buffer, p, Black, in, Directions, true));
+    if (m) {
+    black_moves += 7;
+    }
+    }
+    */
+
+    if (white_moves < 2 && black_moves>white_moves) black_moves <<= 2 - white_moves;
+    else if (black_moves < 2 && white_moves>black_moves) white_moves <<= 2 - black_moves;
+    sum = sum + white_moves - black_moves;
+
+    if (white_moves == 0 && black_moves == 0) {
+      if (find_simple_value(in, root_color) < 0) sum = -100000;
+      else sum = 100000;
+
+      //        *store_value_in_table = sum;
+      //        printf("end of game %i \n",sum);
+      return sum;
+    }
+    ///*
+
+    //11 12 13 14 15 16 17 18
+    //21 22 23 24 25 26 27 28
+    //31 32 33 34 35 36 37 38
+    //41 42 43 44 45 46 47 48
+    //51 52 53 54 55 56 57 58
+    //61 62 63 64 65 66 67 68
+    //71 72 73 74 75 76 77 78
+    //81 82 83 84 85 86 87 88
+
+
+    const int8_t corner_fix2[] = { 11,18,81,88 };
+    for (int i = 0;i < 4;++i) {
+      if (board[corner_fix2[i]] == White) sum += 1800; else sum -= 1800;
+    }
+
+
+    //setup scoring
+    const int8_t corner_fix4[] = { 11,12,22,21,18,17,27,28,81,71,72,82,88,78,77,87 };
+    for (int8_t i = 0;i < 16;i += 4) {
+      if (board[corner_fix4[i]] == Empty) {
+        if (corner_fix4[i + 1] == White) sum -= 450;
+        else if (corner_fix4[i + 1] == White) sum += 450;
+        else {
+          if (fast_move_check(corner_fix4[i + 1], White, board)) sum -= 160;
+          if (fast_move_check(corner_fix4[i + 1], Black, board)) sum += 160;
+        }
+
+        if (corner_fix4[i + 3] == White) sum -= 450;
+        else if (corner_fix4[i + 3] == White) sum += 450;
+        else {
+          if (fast_move_check(corner_fix4[i + 3], White, board)) sum -= 160;
+          if (fast_move_check(corner_fix4[i + 3], Black, board)) sum += 160;
+        }
+
+        if (corner_fix4[i + 2] == White) sum -= 800;
+        else if (corner_fix4[i + 2] == White) sum += 800;
+        else {
+          if (fast_move_check(corner_fix4[i + 2], White, board)) sum -= 500;
+          if (fast_move_check(corner_fix4[i + 2], Black, board)) sum += 500;
+        }
+      }
+    }
+
+    //*/
+
+
+    //    assert(root_color == White);
+    if (root_color == Black) sum = -sum;
+    //? how to count options?
+    //    *store_value_in_table = sum;
+    //    printf("%i\n", sum);
+    return sum;
+  }
+  int find_value(BoardArray in, Square root_color, bool use_move_count, bool display, int empty_left)
+  {
+    if (empty_left > 20)
+      return early_find_value(in, root_color, use_move_count, display);
     for (int i = 11;i <= 88;++i) aValuationArray[i] = 0;
 
     CompressedBoard cbs;
@@ -1354,7 +1461,7 @@ public:
       }
       int8_t s = shifts[Valuations[i].dir];
       int8_t s2 = shifts[Valuations[1 + i].dir];
-//      assert(s >= 0);
+      //      assert(s >= 0);
       for (int8_t j = Valuations[i].pos + Valuations[i].dir*(Valuations[i].len - 1),
         j2 = Valuations[1 + i].pos + Valuations[1 + i].dir*(Valuations[i].len - 1),
         k = 1;k <= Valuations[i].len;++k,
@@ -1442,27 +1549,27 @@ public:
 
     //setup scoring
     const int8_t corner_fix4[] = { 11,12,22,21,18,17,27,28,81,71,72,82,88,78,77,87 };
-    for (int i = 0;i < 16;i += 4) {
+    for (int8_t i = 0;i < 16;i += 4) {
       if (board[corner_fix4[i]] == Empty) {
         if (corner_fix4[i + 1] == White) sum -= 450;
         else if (corner_fix4[i + 1] == White) sum += 450;
         else {
-          if (move(undo_buffer, corner_fix4[i + 1], White, true)) sum -= 160;
-          if (move(undo_buffer, corner_fix4[i + 1], Black, true)) sum += 160;
+          if (fast_move_check(corner_fix4[i + 1], White, board)) sum -= 160;
+          if (fast_move_check(corner_fix4[i + 1], Black, board)) sum += 160;
         }
 
         if (corner_fix4[i + 3] == White) sum -= 450;
         else if (corner_fix4[i + 3] == White) sum += 450;
         else {
-          if (move(undo_buffer, corner_fix4[i + 3], White, true)) sum -= 160;
-          if (move(undo_buffer, corner_fix4[i + 3], Black, true)) sum += 160;
+          if (fast_move_check(corner_fix4[i + 3], White, board)) sum -= 160;
+          if (fast_move_check(corner_fix4[i + 3], Black, board)) sum += 160;
         }
 
         if (corner_fix4[i + 2] == White) sum -= 800;
         else if (corner_fix4[i + 2] == White) sum += 800;
         else {
-          if (move(undo_buffer, corner_fix4[i + 2], White, true)) sum -= 500;
-          if (move(undo_buffer, corner_fix4[i + 2], Black, true)) sum += 500;
+          if (fast_move_check(corner_fix4[i + 2], White, board)) sum -= 500;
+          if (fast_move_check(corner_fix4[i + 2], Black, board)) sum += 500;
         }
       }
     }
@@ -1479,6 +1586,86 @@ public:
   }
 
 
+
+//11 12 13 14 15 16 17 18
+//21 22 23 24 25 26 27 28
+//31 32 33 34 35 36 37 38
+//41 42 43 44 45 46 47 48
+//51 52 53 54 55 56 57 58
+//61 62 63 64 65 66 67 68
+//71 72 73 74 75 76 77 78
+//81 82 83 84 85 86 87 88
+
+const int8_t side_corners[8] = { 12,21,17,28,82,71,78,87 };
+const int8_t side_corners1[8] = { 13,31,16,38,83,61,68,86 };
+const int8_t side_corners2[8] = { 14,41,15,48,84,51,58,85 };
+const int8_t side_corners3[8] = { 15,51,14,58,85,41,48,84 };
+const int8_t side_corners4[8] = { 16,61,13,68,86,31,38,83 };
+const int8_t side_corners5[8] = { 17,71,12,78,87,21,28,82 };
+const int8_t side_corners6[8] = { 18,81,11,88,88,11,18,81 };
+
+const int8_t *analyse_side[6] = { side_corners1,side_corners2,side_corners3,side_corners4,side_corners5,side_corners6 };
+
+const int8_t corners_side[8] = { 11,11,18,18,81,81,88,88 };
+
+const int8_t inner_corners[4] = { 22,27,72,77 };
+const int8_t corners[4] = { 11,18,81,88 };
+
+bool move_dangerous(Square move, BoardArray in, Square color)
+{
+  ::undo(undo_buffer, in);
+
+  Square other = other_color(color);
+
+  bool corners_not_taken[4] = { in[11] == Empty,in[18] == Empty,in[81] == Empty,in[88] == Empty };
+  bool inner_corners_not_taken[4] = { in[22] != color,in[27] != color,in[72] != color,in[77] != color };
+  bool side_corners_not_taken[8] = {
+    in[12] != color,in[21] != color,in[17] != color,in[28] != color,
+    in[78] != color,in[87] != color,in[82] != color,in[71] != color
+  };
+
+  fast_move(undo_buffer, move, color, in);
+  bool dangerous = false;
+  for (int c = 0;c < 8;++c) {
+    if (corners_not_taken[c >> 1] && side_corners_not_taken[c] && in[side_corners[c]] == color && in[corners_side[c]] != color
+      ) {
+      for (int s = 0;s < 6; s++) {
+        Square p = analyse_side[s][c];
+        if (in[p] == other) return true;
+        if (in[p] == Empty) {
+          //not quite right, what if you can undo this move immediately
+          //need a pattern based one
+          if (fast_move(undo_buffer, p, other, in)) {
+            if (s < 5 && fast_move(undo_buffer, analyse_side[s + 1][c], color, in)) {
+              ::undo(undo_buffer, in);
+              ::undo(undo_buffer, in);
+              c = 7;
+              break;
+            }
+            else {
+              ::undo(undo_buffer, in);
+              return true;
+            }
+          }
+        }
+      }
+      break;
+    }
+  }
+  for (int c = 0;c < 4;++c) {
+    if (corners_not_taken[c] && inner_corners_not_taken[c] && in[inner_corners[c]] == color && in[corners[c]] != color
+      ) {
+      dangerous = true;
+      break;
+    }
+  }
+  return dangerous;
+}
+
+
+void remove_dangerous_moves(int *moves, BoardArray in, Square color)
+{
+
   //11 12 13 14 15 16 17 18
   //21 22 23 24 25 26 27 28
   //31 32 33 34 35 36 37 38
@@ -1487,124 +1674,45 @@ public:
   //61 62 63 64 65 66 67 68
   //71 72 73 74 75 76 77 78
   //81 82 83 84 85 86 87 88
-
-  const int8_t side_corners[8] = { 12,21,17,28,82,71,78,87 };
-  const int8_t side_corners1[8] = { 13,31,16,38,83,61,68,86 };
-  const int8_t side_corners2[8] = { 14,41,15,48,84,51,58,85 };
-  const int8_t side_corners3[8] = { 15,51,14,58,85,41,48,84 };
-  const int8_t side_corners4[8] = { 16,61,13,68,86,31,38,83 };
-  const int8_t side_corners5[8] = { 17,71,12,78,87,21,28,82 };
-  const int8_t side_corners6[8] = { 18,81,11,88,88,11,18,81 };
-
-  const int8_t *analyse_side[6] = { side_corners1,side_corners2,side_corners3,side_corners4,side_corners5,side_corners6 };
-
-  const int8_t corners_side[8] = { 11,11,18,18,81,81,88,88 };
-
-  const int8_t inner_corners[4] = { 22,27,72,77 };
-  const int8_t corners[4] = { 11,18,81,88 };
-
-  bool move_dangerous(Square move, BoardArray in, Square color)
-  {
-    ::undo(undo_buffer, in);
-    
-    Square other = other_color(color);
-    
-    bool corners_not_taken[4] = { in[11] == Empty,in[18] == Empty,in[81] == Empty,in[88] == Empty };
-    bool inner_corners_not_taken[4] = { in[22] != color,in[27] != color,in[72] != color,in[77] != color };
-    bool side_corners_not_taken[8] = { 
-      in[12] != color,in[21] != color,in[17] != color,in[28] != color, 
-      in[78] != color,in[87] != color,in[82] != color,in[71] != color
-    };
-
-    fast_move(undo_buffer, move, color, in);
+  /*
+  if corner not taken then any move that sets in from corner to my color is dangerous
+  any that makes side gap is slightly dangerous - hard to test
+  any that sets side to my corner is very slightly dangerous
+  */
+  bool corners_not_taken[4] = { in[11] == Empty,in[18] == Empty,in[81] == Empty,in[88] == Empty };
+  bool inner_corners_not_taken[4] = { in[22] != color,in[27] != color,in[72] != color,in[77] != color };
+  int count = 0;
+  for (int i = 1;i <= moves[0];++i) {
+    //::move(undo_buffer, moves[i], color, in, Directions);
+    fast_move(undo_buffer, moves[i], color, in);
     bool dangerous = false;
-    for (int c = 0;c < 8;++c) {
-      if (corners_not_taken[c>>1] && side_corners_not_taken[c] && in[side_corners[c]] == color && in[corners_side[c]] != color
-        ) {
-        for (int s = 0;s < 6; s++) {
-          Square p = analyse_side[s][c];
-          if (in[p] == other) return true;
-          if (in[p] == Empty) {
-            //not quite right, what if you can undo this move immediately
-            //need a pattern based one
-            if (fast_move(undo_buffer, p, other, in)) {
-              if (s < 5 && fast_move(undo_buffer, analyse_side[s + 1][c], color, in)) {
-                ::undo(undo_buffer, in);
-                ::undo(undo_buffer, in);
-                c = 7;
-                break;
-              }
-              else {
-                ::undo(undo_buffer, in);
-                return true;
-              }
-            }
-          }
-        }
-        break;
-      }
-    }
     for (int c = 0;c < 4;++c) {
       if (corners_not_taken[c] && inner_corners_not_taken[c] && in[inner_corners[c]] == color && in[corners[c]] != color
         ) {
         dangerous = true;
+        ++count;
         break;
       }
     }
-    return dangerous;
+    ::undo(undo_buffer, in);
+    danger[i] = dangerous;
   }
+  if (count == 0 || count == moves[0]) return;
 
-
-  void remove_dangerous_moves(int *moves, BoardArray in, Square color)
-  {
-
-    //11 12 13 14 15 16 17 18
-    //21 22 23 24 25 26 27 28
-    //31 32 33 34 35 36 37 38
-    //41 42 43 44 45 46 47 48
-    //51 52 53 54 55 56 57 58
-    //61 62 63 64 65 66 67 68
-    //71 72 73 74 75 76 77 78
-    //81 82 83 84 85 86 87 88
-    /*
-    if corner not taken then any move that sets in from corner to my color is dangerous
-    any that makes side gap is slightly dangerous - hard to test
-    any that sets side to my corner is very slightly dangerous
-    */
-    bool corners_not_taken[4] = { in[11] == Empty,in[18] == Empty,in[81] == Empty,in[88] == Empty };
-    bool inner_corners_not_taken[4] = { in[22] != color,in[27] != color,in[72] != color,in[77] != color };
-    int count = 0;
-    for (int i = 1;i <= moves[0];++i) {
-      //::move(undo_buffer, moves[i], color, in, Directions);
-      fast_move(undo_buffer, moves[i], color, in);
-      bool dangerous = false;
-      for (int c = 0;c < 4;++c) {
-        if (corners_not_taken[c] && inner_corners_not_taken[c] && in[inner_corners[c]] == color && in[corners[c]] != color
-          ) {
-          dangerous = true;
-          ++count;
-          break;
-        }
-      }
-      ::undo(undo_buffer, in);
-      danger[i] = dangerous;
-    }
-    if (count == 0 || count == moves[0]) return;
-
-    for (int i = 0;i <= moves[0];++i) {
-      copy[i] = moves[i];
-      copy_scores[i] = move_collection_scores[i];
-    }
-    moves[0] = 0;
-    int j = 1;
-    for (int i = 1;i <= copy[0];++i)
-      if (!danger[i]) {
-        ++moves[0];
-        moves[moves[0]] = copy[i];
-        move_collection_scores[moves[0]] = copy_scores[i];
-      }
-
+  for (int i = 0;i <= moves[0];++i) {
+    copy[i] = moves[i];
+    copy_scores[i] = move_collection_scores[i];
   }
+  moves[0] = 0;
+  int j = 1;
+  for (int i = 1;i <= copy[0];++i)
+    if (!danger[i]) {
+      ++moves[0];
+      moves[moves[0]] = copy[i];
+      move_collection_scores[moves[0]] = copy_scores[i];
+    }
+
+}
 };
 
 Valuator valuator;
@@ -1612,18 +1720,17 @@ bool in_endgame = false;
 
 int Board::find_move(int depth, Square color, bool use_move_count, bool stochastic)
 {
+  int empty_depth = valuator.find_empty(board);
   if (stochastic) {
-    int empty_depth = valuator.find_empty(board);
     int moveAt = 0;
-    if (empty_depth < 13) {
+    if (empty_depth < 15) {
       Serial.print(F("endgame "));
       endgame_alphabeta(moveAt, empty_depth, -INT_MAX, INT_MAX, color, color, false);
     }
-    else random_alphabeta(0,moveAt, depth, -INT_MAX, INT_MAX, color, color, use_move_count);
+    else random_alphabeta(0, moveAt, depth, -INT_MAX, INT_MAX, color, color, use_move_count, empty_depth - depth);
     return moveAt;
   }
   else {
-    int empty_depth = valuator.find_empty(board);
     int moveAt = 0;
     if (empty_depth < 13) {
       Serial.print(F("endgame "));
@@ -1641,11 +1748,11 @@ int Board::find_move(int depth, Square color, bool use_move_count, bool stochast
     //prime the endgame refutation
     //  int endgame_reflect = 48 - empty_depth;
     //  if (endgame_reflect>0 ) endgame_alphabeta(moveAt, endgame_reflect, -INT_MAX, INT_MAX, color, color, false);
-    if (collect_primary_alphabeta(NUM_PRIMARY, NUM_PRIMARY_MAX, move_collection, depth - 2, color, color, use_move_count)) {
+    if (collect_primary_alphabeta(NUM_PRIMARY, NUM_PRIMARY_MAX, move_collection, depth - 2, color, color, use_move_count, empty_depth - depth + 2)) {
 
       valuator.remove_dangerous_moves(move_collection, board, color);
       //undo(undo_buffer, board);
-      movelist_alphabeta(move_collection, moveAt, depth, color, color, use_move_count);
+      movelist_alphabeta(move_collection, moveAt, depth, color, color, use_move_count, empty_depth - depth);
       //alphabeta(moveAt, depth, -INT_MAX, INT_MAX, color, color, use_move_count);
       return moveAt;
     }
@@ -1658,8 +1765,8 @@ int Board::find_move(int depth, Square color, bool use_move_count, bool stochast
 int32_t Board::endgame_alphabeta(int &move_at, int depth, int32_t alpha, int32_t beta, Square color, Square root_color, bool passed)
 {
   if (depth <= 0) {
-    
-//    Serial.println("endgame depth<=0");
+
+    //    Serial.println("endgame depth<=0");
     return valuator.find_simple_value(board, root_color);
   }
   int at, move_number = 0;
@@ -1667,14 +1774,14 @@ int32_t Board::endgame_alphabeta(int &move_at, int depth, int32_t alpha, int32_t
   if (color == root_color) { //maximizing
     int32_t v = -INT_MAX;
     while (endgame_next_move(move_number, at, color, depth)) {
-//      Serial.print("endgame move depth = ");Serial.print(depth);Serial.print(" at = ");Serial.println(at);
+      //      Serial.print("endgame move depth = ");Serial.print(depth);Serial.print(" at = ");Serial.println(at);
 
       int32_t n = endgame_alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color);
       if (n > v) {
         v = n;
         move_at = at;
         killer(move_number - 1, color, depth);
-//        Serial.print("killer at depth = ");Serial.println(depth);
+        //        Serial.print("killer at depth = ");Serial.println(depth);
       }
       if (v > alpha) {
         alpha = v;
@@ -1687,8 +1794,8 @@ int32_t Board::endgame_alphabeta(int &move_at, int depth, int32_t alpha, int32_t
     }
     if (v == -INT_MAX) {
       if (passed) {
-        
-//        Serial.println("end by two passes");
+
+        //        Serial.println("end by two passes");
         return valuator.find_simple_value(board, root_color);
       }
       move_at = 0;
@@ -1699,12 +1806,12 @@ int32_t Board::endgame_alphabeta(int &move_at, int depth, int32_t alpha, int32_t
   else {//minimizing
     int32_t v = INT_MAX;
     while (endgame_next_move(move_number, at, color, depth)) {
-//      Serial.print("endgame move depth = ");Serial.print(depth);Serial.print(" at = ");Serial.println(at);
+      //      Serial.print("endgame move depth = ");Serial.print(depth);Serial.print(" at = ");Serial.println(at);
       int32_t n = endgame_alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color);
       if (n < v) {
         v = n;
         move_at = at;
-//        Serial.print("killer at depth = ");Serial.println(depth);
+        //        Serial.print("killer at depth = ");Serial.println(depth);
         killer(move_number - 1, color, depth);
       }
       if (v < beta) {
@@ -1717,7 +1824,7 @@ int32_t Board::endgame_alphabeta(int &move_at, int depth, int32_t alpha, int32_t
     }
     if (v == INT_MAX) {
       if (passed) {
-//        Serial.println("end by two passes");
+        //        Serial.println("end by two passes");
         return valuator.find_simple_value(board, root_color);
       }
       move_at = 0;
@@ -1731,7 +1838,7 @@ int32_t Board::endgame_alphabeta(int &move_at, int depth, int32_t alpha, int32_t
 
 
 //damn this is an inefficient algorithm... talk about quick and dirty
-bool Board::collect_primary_alphabeta(int collect, int collect_max, int * move_collection, int depth, Square color, Square root_color, bool use_move_count)
+bool Board::collect_primary_alphabeta(int collect, int collect_max, int * move_collection, int depth, Square color, Square root_color, bool use_move_count, int empty_left)
 {
   int current_move_pos = 0;
   do {
@@ -1748,7 +1855,7 @@ bool Board::collect_primary_alphabeta(int collect, int collect_max, int * move_c
       //next_move should work here!
       while (next_move_not_in(move_collection, move_number, at, color, depth)) {
 
-        int32_t n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);
+        int32_t n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count, empty_left);
         if (n > v) {
           //just take bonehead move out of the list if there's an alt
           //* 
@@ -1770,7 +1877,7 @@ bool Board::collect_primary_alphabeta(int collect, int collect_max, int * move_c
       }
       if (v == -INT_MAX) {
         //        move_collection[current_move_pos] = 0;
-        v = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);//passed
+        v = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count, empty_left);//passed
         continue;
       }
       continue;
@@ -1778,7 +1885,7 @@ bool Board::collect_primary_alphabeta(int collect, int collect_max, int * move_c
     else {//minimizing
       int32_t v = INT_MAX;
       while (next_move_not_in(move_collection, move_number, at, color, depth)) {
-        int32_t n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);
+        int32_t n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count, empty_left);
         if (n < v) {
           //just take bonehead move out of the list if there's an alt
           //*
@@ -1799,7 +1906,7 @@ bool Board::collect_primary_alphabeta(int collect, int collect_max, int * move_c
       }
       if (v == INT_MAX) {
         //        move_collection[current_move_pos] = 0;
-        v = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);//passed
+        v = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count, empty_left);//passed
         continue;
       }
       move_collection[current_move_pos] = at;
@@ -1812,7 +1919,7 @@ bool Board::collect_primary_alphabeta(int collect, int collect_max, int * move_c
   return move_collection[0] != 0;
 }
 
-int32_t Board::movelist_alphabeta(int* move_collection, int &move_at, int depth, Square color, Square root_color, bool use_move_count)
+int32_t Board::movelist_alphabeta(int* move_collection, int &move_at, int depth, Square color, Square root_color, bool use_move_count, int empty_left)
 {
   int32_t alpha = -INT_MAX;
   int32_t beta = INT_MAX;
@@ -1823,10 +1930,10 @@ int32_t Board::movelist_alphabeta(int* move_collection, int &move_at, int depth,
     int32_t v = -INT_MAX;
     while (++move_list_counter <= move_collection[0]) {
       at = move_collection[move_list_counter];
-//      assert(at >= 11 && at <= 88);
+      //      assert(at >= 11 && at <= 88);
       bool moved = move(undo_buffer, at, color);
-//      assert(moved);
-      int32_t n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);
+      //      assert(moved);
+      int32_t n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count, empty_left);
       if (n > v) {
         v = n;
         move_at = at;
@@ -1843,7 +1950,7 @@ int32_t Board::movelist_alphabeta(int* move_collection, int &move_at, int depth,
     }
     if (v == -INT_MAX) {
       move_at = 0;
-      return alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);//passed
+      return alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count, empty_left);//passed
     }
     return v;
   }
@@ -1851,10 +1958,10 @@ int32_t Board::movelist_alphabeta(int* move_collection, int &move_at, int depth,
     int32_t v = INT_MAX;
     while (++move_list_counter <= move_collection[0]) {
       at = move_collection[move_list_counter];
-//      assert(at >= 11 && at <= 88);
+      //      assert(at >= 11 && at <= 88);
       bool moved = move(undo_buffer, at, color);
-//      assert(moved);
-      int32_t n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);
+      //      assert(moved);
+      int32_t n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count, empty_left);
       if (n < v) {
         v = n;
         move_at = at;
@@ -1870,7 +1977,7 @@ int32_t Board::movelist_alphabeta(int* move_collection, int &move_at, int depth,
     }
     if (v == INT_MAX) {
       move_at = 0;
-      return alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);//passed
+      return alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count, empty_left);//passed
     }
     move_at = at;
     return v;
@@ -1882,39 +1989,39 @@ int32_t Board::movelist_alphabeta(int* move_collection, int &move_at, int depth,
 #define LOG(n) { Serial.print(#n);Serial.print(" ");Serial.println(n); }
 #define LOGD(d,n) { Serial.print(d);Serial.print(" ");Serial.println(n); }
 
-int32_t Board::random_alphabeta(int curdepth, int &move_at, int depth, int32_t alpha, int32_t beta, Square color, Square root_color, bool use_move_count)
+int32_t Board::random_alphabeta(int curdepth, int &move_at, int depth, int32_t alpha, int32_t beta, Square color, Square root_color, bool use_move_count, int empty_left)
 {
-  
-//  Serial.println("random_alphabeta");
+
+  //  Serial.println("random_alphabeta");
   if (depth <= 0 || end_of_game()) {
-//    Serial.println("end of game");
-    return valuator.find_value(board, root_color, use_move_count, false);
+    //    Serial.println("end of game");
+    return valuator.find_value(board, root_color, use_move_count, false, empty_left);
   }
   int inner_move;
   bool first = true;
   bool was_dangerous = false;
-  int initialpos=0;
-  if (depth_schedule[curdepth]!=64) {
-    
-//    int32_t r = rand();
-//    LOG(r);
-//    r>>=RAND_SHIFT;
-//    LOGD("r>>RAND_SHIFT",r);
-//    r*=64;
-//    LOGD("(r>>RAND_SHIFT)*64",r);
-//    LOGD("(((RAND_MAX>>RAND_SHIFT)+1)",(((int32_t)RAND_MAX>>RAND_SHIFT)+1));
-//    initialpos = r/(((int32_t)RAND_MAX>>RAND_SHIFT)+1);
-//    LOG(initialpos);
-    initialpos = (int32_t)(rand()>>RAND_SHIFT) * 64 / (((int32_t)RAND_MAX>>RAND_SHIFT)+1);
+  int initialpos = 0;
+  if (depth_schedule[curdepth] != 64) {
+
+    //    int32_t r = rand();
+    //    LOG(r);
+    //    r>>=RAND_SHIFT;
+    //    LOGD("r>>RAND_SHIFT",r);
+    //    r*=64;
+    //    LOGD("(r>>RAND_SHIFT)*64",r);
+    //    LOGD("(((RAND_MAX>>RAND_SHIFT)+1)",(((int32_t)RAND_MAX>>RAND_SHIFT)+1));
+    //    initialpos = r/(((int32_t)RAND_MAX>>RAND_SHIFT)+1);
+    //    LOG(initialpos);
+    initialpos = (int32_t)(rand() >> RAND_SHIFT) * 64 / (((int32_t)RAND_MAX >> RAND_SHIFT) + 1);
   }
   int at, move_number = initialpos;
   if (color == root_color) { //maximizing
-    
-//    Serial.println("root color");
+
+                 //    Serial.println("root color");
     int32_t v = -INT_MAX;
-//    { Serial.print("first move "); Serial.println(initialpos); }
-    while (next_move_random(move_number, at, color, curdepth, first, initialpos,depth)) {
-//      { Serial.print("move ");Serial.print( at);Serial.print(" #");Serial.println( move_number); }
+    //    { Serial.print("first move "); Serial.println(initialpos); }
+    while (next_move_random(move_number, at, color, curdepth, first, initialpos, depth)) {
+      //      { Serial.print("move ");Serial.print( at);Serial.print(" #");Serial.println( move_number); }
       first = false;
       int32_t n;
       //{}{}{} rewrite to fill only on no cut wait would that have to be 
@@ -1923,20 +2030,20 @@ int32_t Board::random_alphabeta(int curdepth, int &move_at, int depth, int32_t a
       //        n = *to_store;
       //      }
       //      else {
-      n = random_alphabeta(curdepth+1,inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);
+      n = random_alphabeta(curdepth + 1, inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count, empty_left);
       //        *to_store = n;
       //      }
       bool dangerous = false;
       if (curdepth == 0) {
         dangerous = valuator.move_dangerous(at, board, color);
-//        if (dangerous) { Serial.print( "\ndanger ");Serial.println( at);}
+        //        if (dangerous) { Serial.print( "\ndanger ");Serial.println( at);}
         if (dangerous && v != -INT_MAX) n = v;
       }
       if (n > v || (was_dangerous && !dangerous)) {
         v = n;
         was_dangerous = dangerous;
         move_at = at;
-//        killer(move_number - 1, color, depth);
+        //        killer(move_number - 1, color, depth);
       }
       if (v > alpha) {
         alpha = v;
@@ -1949,35 +2056,35 @@ int32_t Board::random_alphabeta(int curdepth, int &move_at, int depth, int32_t a
     }
     if (v == -INT_MAX) {
       move_at = 0;
-      return random_alphabeta(curdepth + 1, inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);//passed
+      return random_alphabeta(curdepth + 1, inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count, empty_left);//passed
     }
     return v;
   }
   else {//minimizing
-//    Serial.println("other color");
+      //    Serial.println("other color");
     int32_t v = INT_MAX;
-    while (next_move_random(move_number, at, color, curdepth, first, initialpos,depth)) {
-//      { Serial.print("move ");Serial.print( at);Serial.print( " #");Serial.println( move_number); }
+    while (next_move_random(move_number, at, color, curdepth, first, initialpos, depth)) {
+      //      { Serial.print("move ");Serial.print( at);Serial.print( " #");Serial.println( move_number); }
       first = false;
       int32_t n;
       //      if (TranspositionEntry::find_and_fill(to_store, board, depth)) {
       //        n = *to_store;
       //      }
       //      else {
-      n = random_alphabeta(curdepth + 1, inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);
+      n = random_alphabeta(curdepth + 1, inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count, empty_left);
       //        *to_store = n;
       //      }
       bool dangerous = false;
       if (curdepth == 0) {
         dangerous = valuator.move_dangerous(at, board, color);
-//        { Serial.print("\ndanger ");Serial.println( at);}
+        //        { Serial.print("\ndanger ");Serial.println( at);}
         if (dangerous && v != INT_MAX) n = v;
       }
       if (n < v || (was_dangerous && !dangerous)) {
         v = n;
         was_dangerous = dangerous;
         move_at = at;
-//        killer(move_number - 1, color, depth);
+        //        killer(move_number - 1, color, depth);
       }
       if (v < beta) {
         beta = v;
@@ -1989,7 +2096,7 @@ int32_t Board::random_alphabeta(int curdepth, int &move_at, int depth, int32_t a
     }
     if (v == INT_MAX) {
       move_at = 0;
-      return random_alphabeta(curdepth + 1, inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);//passed
+      return random_alphabeta(curdepth + 1, inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count, empty_left);//passed
     }
     move_at = at;
     return v;
@@ -1997,14 +2104,14 @@ int32_t Board::random_alphabeta(int curdepth, int &move_at, int depth, int32_t a
 
 }
 
-int32_t Board::alphabeta(int &move_at, int depth, int32_t alpha, int32_t beta, Square color, Square root_color, bool use_move_count)
+int32_t Board::alphabeta(int &move_at, int depth, int32_t alpha, int32_t beta, Square color, Square root_color, bool use_move_count, int empty_left)
 {
 #if (QUIESCENT_DEPTH!=0)
   if (depth == -QUIESCENT_DEPTH || (depth <= 0 && valuator.quiescent(board)) || end_of_game()) {
 #else
   if (depth <= 0 || end_of_game()) {
 #endif
-    return valuator.find_value(board, root_color, use_move_count, false);
+    return valuator.find_value(board, root_color, use_move_count, false, empty_left);
   }
   int at, move_number = 0;
   int inner_move;
@@ -2018,7 +2125,7 @@ int32_t Board::alphabeta(int &move_at, int depth, int32_t alpha, int32_t beta, S
       //        n = *to_store;
       //      }
       //      else {
-      n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);
+      n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count, empty_left);
       //        *to_store = n;
       //      }
       if (n > v) {
@@ -2037,7 +2144,7 @@ int32_t Board::alphabeta(int &move_at, int depth, int32_t alpha, int32_t beta, S
     }
     if (v == -INT_MAX) {
       move_at = 0;
-      return alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);//passed
+      return alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count, empty_left);//passed
     }
     return v;
   }
@@ -2049,7 +2156,7 @@ int32_t Board::alphabeta(int &move_at, int depth, int32_t alpha, int32_t beta, S
       //        n = *to_store;
       //      }
       //      else {
-      n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);
+      n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count, empty_left);
       //        *to_store = n;
       //      }
       if (n < v) {
@@ -2067,7 +2174,7 @@ int32_t Board::alphabeta(int &move_at, int depth, int32_t alpha, int32_t beta, S
     }
     if (v == INT_MAX) {
       move_at = 0;
-      return alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);//passed
+      return alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count, empty_left);//passed
     }
     move_at = at;
     return v;
@@ -2075,21 +2182,21 @@ int32_t Board::alphabeta(int &move_at, int depth, int32_t alpha, int32_t beta, S
 
   }
 
-void setup() 
+void setup()
 {
-  pinMode(13, OUTPUT);  
+  pinMode(13, OUTPUT);
   Serial.begin(250000);
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 
   Serial.println(F("Hello World"));
-  Serial.println(RAND_MAX>>RAND_SHIFT);
+  Serial.println(RAND_MAX >> RAND_SHIFT);
   srand(analogRead(0));
   //srand(7043);
   Board b;
   Serial.println(F("board"));
-  
+
   bool black_passed;
   bool white_passed;
   do {
@@ -2101,12 +2208,12 @@ void setup()
       Serial.println(F("Black must pass"));
       black_passed = true;
     }
-      else {
-        b.input(Black, "c9");
+    else {
+      b.input(Black, "c9");
       black_passed = false;
     }
     //increment_killers();
-//    valuator.find_value(b.board, White,false, true);
+    //    valuator.find_value(b.board, White,false, true);
     if (!b.can_move(White)) {
       if (black_passed) {
         Serial.println(F("game over"));
@@ -2116,14 +2223,14 @@ void setup()
       white_passed = true;
     }
     else {
-      b.input(White,"b7");
+      b.input(White);
       white_passed = false;
     }
     //increment_killers();
     //    valuator.find_value(b.board, Black, false,true);
   } while (true);
   b.print();
- 
+
   // compute and print the elapsed time in millisec
 }
 
