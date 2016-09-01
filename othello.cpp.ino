@@ -1,9 +1,17 @@
 #include <stdint.h>
 
+#define MEGA
+
 #define INT_MAX 2147483647
 
 // consolegame.cpp : Defines the entry point for the console application.
 //
+
+#if RAND_MAX <= 0x7fff
+# define RAND_SHIFT 0
+#else
+# define RAND_SHIFT 16
+#endif
 
 #define __min(x,y) (x)<(y)?(x):(y)
 
@@ -16,9 +24,10 @@ char *gets(char * b,size_t maxlen)
     delay(2);//I seem to have to delay enough to get the next byte at 9600 baud
   }
   b[len]=0;
+  Serial.print(b);
   return b;
 }
-int blink_counter = 20000;
+int blink_counter = 1250;
 bool blink_state=false;
 void blink()
 {
@@ -26,7 +35,7 @@ void blink()
     if (blink_state) digitalWrite(13, LOW);
     else digitalWrite(13, HIGH);
     blink_state = !blink_state;
-    blink_counter = 20000;
+    blink_counter = 1250;
   }
 }
 
@@ -35,14 +44,13 @@ void blink()
 
 //#define NO_OPTIMIZATION
 
-#define Square uint8_t
+#define Square uint8_t 
+#define Safety uint16_t 
 
-#define SafetyT unsigned
-
-#define BoardLine unsigned
+#define BoardLine uint16_t 
 
 
-typedef SafetyT CompressedBoard[8];
+typedef Safety CompressedBoard[8];
 
 typedef Square BoardArray[100];
 struct ValTriple { int8_t pos; int8_t dir; int8_t len; };
@@ -74,35 +82,35 @@ const ValTriple Valuations[] =
   { 11,11,8 },
   { 0,0,0 }
 };
-const SafetyT compress_a[256] PROGMEM = {
-0, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9, 9, 10, 11, 12, 9, 10, 11, 12, 12, 13, 14, 15, 15, 16, 17, 18, 18, 19, 20, 21, 
-18, 19, 20, 21, 21, 22, 23, 24, 24, 25, 26, 27, 27, 28, 29, 30, 27, 28, 29, 30, 30, 31, 32, 33, 33, 34, 35, 36, 36, 37, 38, 39, 
-27, 28, 29, 30, 30, 31, 32, 33, 33, 34, 35, 36, 36, 37, 38, 39, 36, 37, 38, 39, 39, 40, 41, 42, 42, 43, 44, 45, 45, 46, 47, 48, 
-45, 46, 47, 48, 48, 49, 50, 51, 51, 52, 53, 54, 54, 55, 56, 57, 54, 55, 56, 57, 57, 58, 59, 60, 60, 61, 62, 63, 63, 64, 65, 66, 
-54, 55, 56, 57, 57, 58, 59, 60, 60, 61, 62, 63, 63, 64, 65, 66, 63, 64, 65, 66, 66, 67, 68, 69, 69, 70, 71, 72, 72, 73, 74, 75, 
-72, 73, 74, 75, 75, 76, 77, 78, 78, 79, 80, 81, 81, 82, 83, 84, 81, 82, 83, 84, 84, 85, 86, 87, 87, 88, 89, 90, 90, 91, 92, 93, 
-81, 82, 83, 84, 84, 85, 86, 87, 87, 88, 89, 90, 90, 91, 92, 93, 90, 91, 92, 93, 93, 94, 95, 96, 96, 97, 98, 99, 99, 100, 101, 102, 
-99, 100, 101, 102, 102, 103, 104, 105, 105, 106, 107, 108, 108, 109, 110, 111, 108, 109, 110, 111, 111, 112, 113, 114, 114, 115, 116, 117, 117, 118, 119, 120, 
+const Safety compress_a[256] PROGMEM = {
+  0, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9, 9, 10, 11, 12, 9, 10, 11, 12, 12, 13, 14, 15, 15, 16, 17, 18, 18, 19, 20, 21,
+  18, 19, 20, 21, 21, 22, 23, 24, 24, 25, 26, 27, 27, 28, 29, 30, 27, 28, 29, 30, 30, 31, 32, 33, 33, 34, 35, 36, 36, 37, 38, 39,
+  27, 28, 29, 30, 30, 31, 32, 33, 33, 34, 35, 36, 36, 37, 38, 39, 36, 37, 38, 39, 39, 40, 41, 42, 42, 43, 44, 45, 45, 46, 47, 48,
+  45, 46, 47, 48, 48, 49, 50, 51, 51, 52, 53, 54, 54, 55, 56, 57, 54, 55, 56, 57, 57, 58, 59, 60, 60, 61, 62, 63, 63, 64, 65, 66,
+  54, 55, 56, 57, 57, 58, 59, 60, 60, 61, 62, 63, 63, 64, 65, 66, 63, 64, 65, 66, 66, 67, 68, 69, 69, 70, 71, 72, 72, 73, 74, 75,
+  72, 73, 74, 75, 75, 76, 77, 78, 78, 79, 80, 81, 81, 82, 83, 84, 81, 82, 83, 84, 84, 85, 86, 87, 87, 88, 89, 90, 90, 91, 92, 93,
+  81, 82, 83, 84, 84, 85, 86, 87, 87, 88, 89, 90, 90, 91, 92, 93, 90, 91, 92, 93, 93, 94, 95, 96, 96, 97, 98, 99, 99, 100, 101, 102,
+  99, 100, 101, 102, 102, 103, 104, 105, 105, 106, 107, 108, 108, 109, 110, 111, 108, 109, 110, 111, 111, 112, 113, 114, 114, 115, 116, 117, 117, 118, 119, 120,
 };
 
-const SafetyT compress_b[256] PROGMEM = 
+const Safety compress_b[256] PROGMEM =
 {
-81, 162, 243, 243, 324, 405, 486, 486, 567, 648, 729, 729, 810, 891, 972, 729, 810, 891, 972, 972, 1053, 1134, 1215, 1215, 1296, 1377, 1458, 1458, 1539, 1620, 1701, 
-1458, 1539, 1620, 1701, 1701, 1782, 1863, 1944, 1944, 2025, 2106, 2187, 2187, 2268, 2349, 2430, 2187, 2268, 2349, 2430, 2430, 2511, 2592, 2673, 2673, 2754, 2835, 2916, 2916, 2997, 3078, 3159, 
-2187, 2268, 2349, 2430, 2430, 2511, 2592, 2673, 2673, 2754, 2835, 2916, 2916, 2997, 3078, 3159, 2916, 2997, 3078, 3159, 3159, 3240, 3321, 3402, 3402, 3483, 3564, 3645, 3645, 3726, 3807, 3888, 
-3645, 3726, 3807, 3888, 3888, 3969, 4050, 4131, 4131, 4212, 4293, 4374, 4374, 4455, 4536, 4617, 4374, 4455, 4536, 4617, 4617, 4698, 4779, 4860, 4860, 4941, 5022, 5103, 5103, 5184, 5265, 5346, 
-4374, 4455, 4536, 4617, 4617, 4698, 4779, 4860, 4860, 4941, 5022, 5103, 5103, 5184, 5265, 5346, 5103, 5184, 5265, 5346, 5346, 5427, 5508, 5589, 5589, 5670, 5751, 5832, 5832, 5913, 5994, 6075, 
-5832, 5913, 5994, 6075, 6075, 6156, 6237, 6318, 6318, 6399, 6480, 6561, 6561, 6642, 6723, 6804, 6561, 6642, 6723, 6804, 6804, 6885, 6966, 7047, 7047, 7128, 7209, 7290, 7290, 7371, 7452, 7533, 
-6561, 6642, 6723, 6804, 6804, 6885, 6966, 7047, 7047, 7128, 7209, 7290, 7290, 7371, 7452, 7533, 7290, 7371, 7452, 7533, 7533, 7614, 7695, 7776, 7776, 7857, 7938, 8019, 8019, 8100, 8181, 8262, 
-8019, 8100, 8181, 8262, 8262, 8343, 8424, 8505, 8505, 8586, 8667, 8748, 8748, 8829, 8910, 8991, 8748, 8829, 8910, 8991, 8991, 9072, 9153, 9234, 9234, 9315, 9396, 9477, 9477, 9558, 9639, 9720, 
+  81, 162, 243, 243, 324, 405, 486, 486, 567, 648, 729, 729, 810, 891, 972, 729, 810, 891, 972, 972, 1053, 1134, 1215, 1215, 1296, 1377, 1458, 1458, 1539, 1620, 1701,
+  1458, 1539, 1620, 1701, 1701, 1782, 1863, 1944, 1944, 2025, 2106, 2187, 2187, 2268, 2349, 2430, 2187, 2268, 2349, 2430, 2430, 2511, 2592, 2673, 2673, 2754, 2835, 2916, 2916, 2997, 3078, 3159,
+  2187, 2268, 2349, 2430, 2430, 2511, 2592, 2673, 2673, 2754, 2835, 2916, 2916, 2997, 3078, 3159, 2916, 2997, 3078, 3159, 3159, 3240, 3321, 3402, 3402, 3483, 3564, 3645, 3645, 3726, 3807, 3888,
+  3645, 3726, 3807, 3888, 3888, 3969, 4050, 4131, 4131, 4212, 4293, 4374, 4374, 4455, 4536, 4617, 4374, 4455, 4536, 4617, 4617, 4698, 4779, 4860, 4860, 4941, 5022, 5103, 5103, 5184, 5265, 5346,
+  4374, 4455, 4536, 4617, 4617, 4698, 4779, 4860, 4860, 4941, 5022, 5103, 5103, 5184, 5265, 5346, 5103, 5184, 5265, 5346, 5346, 5427, 5508, 5589, 5589, 5670, 5751, 5832, 5832, 5913, 5994, 6075,
+  5832, 5913, 5994, 6075, 6075, 6156, 6237, 6318, 6318, 6399, 6480, 6561, 6561, 6642, 6723, 6804, 6561, 6642, 6723, 6804, 6804, 6885, 6966, 7047, 7047, 7128, 7209, 7290, 7290, 7371, 7452, 7533,
+  6561, 6642, 6723, 6804, 6804, 6885, 6966, 7047, 7047, 7128, 7209, 7290, 7290, 7371, 7452, 7533, 7290, 7371, 7452, 7533, 7533, 7614, 7695, 7776, 7776, 7857, 7938, 8019, 8019, 8100, 8181, 8262,
+  8019, 8100, 8181, 8262, 8262, 8343, 8424, 8505, 8505, 8586, 8667, 8748, 8748, 8829, 8910, 8991, 8748, 8829, 8910, 8991, 8991, 9072, 9153, 9234, 9234, 9315, 9396, 9477, 9477, 9558, 9639, 9720,
 };
-
 void init_compress()
 {
 }
 //reduce cache pressure by converting base 3 index to compressed form
-inline SafetyT compress3(BoardLine c)
+inline Safety compress3(BoardLine c)
 {
+//  return compress_a[c & 255] + compress_b[c >> 8];
   return pgm_read_word(&compress_a[c & 255]) + pgm_read_word(&compress_b[c >> 8]);
 }
 
@@ -122,25 +130,25 @@ const int NUMDIR = 8;
 const int Directions[] = { 11,9,-11,-9,1,-1,10,-10,0 };
 const int LineDirections[] = { 1,-1,0 };
 
-const SafetyT SafetyT1[3] PROGMEM = {
+const Safety Safety1[3] PROGMEM = {
   3,
   1, 2,
 };
-const SafetyT SafetyT2[9] PROGMEM = {
+const Safety Safety2[9] PROGMEM = {
   15,
   13, 14, 7, 5, 6, 11, 9, 10,
 };
-const SafetyT SafetyT3[27] PROGMEM = {
+const Safety Safety3[27] PROGMEM = {
   63,
   61, 62, 63, 53, 62, 63, 61, 58, 31, 29, 30, 23, 21, 22, 31, 25, 26, 47, 45, 46, 47, 37, 38, 43, 41, 42,
 };
-const SafetyT SafetyT4[81] PROGMEM = {
+const Safety Safety4[81] PROGMEM = {
   255,
   253, 254, 255, 245, 254, 255, 253, 250, 255, 253, 254, 255, 213, 254, 255, 249, 250, 255, 253, 254, 255, 245, 246, 255, 253, 234, 127,
   125, 126, 127, 117, 126, 127, 125, 122, 95, 93, 94, 87, 85, 86, 95, 89, 90, 127, 125, 126, 111, 101, 102, 127, 105, 106, 191,
   189, 190, 191, 181, 190, 191, 189, 186, 191, 189, 190, 191, 149, 150, 159, 153, 154, 175, 173, 174, 175, 165, 166, 171, 169, 170,
 };
-const SafetyT SafetyT5[243] PROGMEM = {
+const Safety Safety5[243] PROGMEM = {
   1023,
   1021, 1022, 1023, 1013, 1022, 1023, 1021, 1018, 1023, 1021, 1022, 1023, 981, 1022, 1023, 1021, 1018, 1023, 1021, 1022, 1023, 1013, 1022, 1023, 1021, 1002, 1023,
   1021, 1022, 1023, 1013, 1022, 1023, 1021, 1018, 1023, 1021, 1022, 1023, 853, 1022, 1023, 1017, 1018, 1023, 1021, 1022, 1007, 997, 998, 1023, 1001, 1002, 1023,
@@ -152,7 +160,7 @@ const SafetyT SafetyT5[243] PROGMEM = {
   765, 766, 767, 757, 766, 767, 765, 762, 767, 765, 766, 767, 597, 598, 607, 601, 602, 767, 637, 638, 623, 613, 614, 639, 617, 618, 703,
   701, 702, 703, 693, 702, 703, 701, 698, 703, 701, 702, 703, 661, 662, 671, 665, 666, 687, 685, 686, 687, 677, 678, 683, 681, 682,
 };
-const SafetyT SafetyT6[729] PROGMEM = {
+const Safety Safety6[729] PROGMEM = {
   4095,
   4093, 4094, 4095, 4085, 4094, 4095, 4093, 4090, 4095, 4093, 4094, 4095, 4053, 4094, 4095, 4093, 4090, 4095, 4093, 4094, 4095, 4085, 4094, 4095, 4093, 4074, 4095,
   4093, 4094, 4095, 4085, 4094, 4095, 4093, 4090, 4095, 4093, 4094, 4095, 3925, 4094, 4095, 4093, 4090, 4095, 4093, 4094, 4095, 4085, 4086, 4095, 4093, 4074, 4095,
@@ -182,7 +190,7 @@ const SafetyT SafetyT6[729] PROGMEM = {
   2813, 2814, 2815, 2805, 2814, 2815, 2813, 2810, 2815, 2813, 2814, 2815, 2645, 2646, 2655, 2649, 2650, 2815, 2685, 2686, 2671, 2661, 2662, 2687, 2665, 2666, 2751,
   2749, 2750, 2751, 2741, 2750, 2751, 2749, 2746, 2751, 2749, 2750, 2751, 2709, 2710, 2719, 2713, 2714, 2735, 2733, 2734, 2735, 2725, 2726, 2731, 2729, 2730,
 };
-const SafetyT SafetyT7[2187] PROGMEM = {
+const Safety Safety7[2187] PROGMEM = {
   16383,
   16381, 16382, 16383, 16373, 16382, 16383, 16381, 16378, 16383, 16381, 16382, 16383, 16341, 16382, 16383, 16381, 16378, 16383, 16381, 16382, 16383, 16373, 16382, 16383, 16381, 16362, 16383,
   16381, 16382, 16383, 16373, 16382, 16383, 16381, 16378, 16383, 16381, 16382, 16383, 16213, 16382, 16383, 16381, 16378, 16383, 16381, 16382, 16383, 16373, 16382, 16383, 16381, 16362, 16383,
@@ -266,7 +274,7 @@ const SafetyT SafetyT7[2187] PROGMEM = {
   11005, 11006, 11007, 10997, 11006, 11007, 11005, 11002, 11007, 11005, 11006, 11007, 10837, 10838, 10847, 10841, 10842, 11007, 10877, 10878, 10863, 10853, 10854, 10879, 10857, 10858, 10943,
   10941, 10942, 10943, 10933, 10942, 10943, 10941, 10938, 10943, 10941, 10942, 10943, 10901, 10902, 10911, 10905, 10906, 10927, 10925, 10926, 10927, 10917, 10918, 10923, 10921, 10922,
 };
-const SafetyT SafetyT8[6561] PROGMEM = {
+const Safety Safety8[6561] PROGMEM = {
   65535,
   65533, 65534, 65535, 65525, 65534, 65535, 65533, 65530, 65535, 65533, 65534, 65535, 65493, 65534, 65535, 65533, 65530, 65535, 65533, 65534, 65535, 65525, 65534, 65535, 65533, 65514, 65535,
   65533, 65534, 65535, 65525, 65534, 65535, 65533, 65530, 65535, 65533, 65534, 65535, 65365, 65534, 65535, 65533, 65530, 65535, 65533, 65534, 65535, 65525, 65534, 65535, 65533, 65514, 65535,
@@ -513,23 +521,20 @@ const SafetyT SafetyT8[6561] PROGMEM = {
   43709, 43710, 43711, 43701, 43710, 43711, 43709, 43706, 43711, 43709, 43710, 43711, 43669, 43670, 43679, 43673, 43674, 43695, 43693, 43694, 43695, 43685, 43686, 43691, 43689, 43690,
 };
 
-#define far_ptr_t unsigned long
-const SafetyT * safety_add[8] =
+const Safety * safety_add[8] =
 {
-  SafetyT1,
-  SafetyT2,
-  SafetyT3,
-  SafetyT4,
-  SafetyT5,
-  SafetyT6,
-  SafetyT7,
-  SafetyT8
+  Safety1,
+  Safety2,
+  Safety3,
+  Safety4,
+  Safety5,
+  Safety6,
+  Safety7,
+  Safety8
 };
-
-SafetyT safety(int a, int i)
+Safety safety(int a, int i)
 {
-  return pgm_read_word(&(safety_add[a])[i]) ;
-  //return pgm_read_word_far_index(safety_add[a], i);
+  return pgm_read_word_far(&(safety_add[a])[i]);
 }
 //paired so direction and len are the same except the last pair where only len is the same
 
@@ -539,13 +544,11 @@ SafetyT safety(int a, int i)
 
 /*x,0,x,x,x,x,x,x,x,2,4,6*/
 const int shifts[] = { -1,0,-1,-1,-1,-1,-1,-1,-1,2,4,6 };
-
-Square undo_buffer_array[64 * 10];
-Square *undo_buffer = &undo_buffer_array[0];
-
 typedef int32_t ValuationArray[100];
 ValuationArray aValuationArray;
 
+Square undo_buffer_array[64 * 10];
+Square *undo_buffer = &undo_buffer_array[0];
 
 inline Square other_color(Square c) { return (Black + White) ^ c; }
 
@@ -624,7 +627,7 @@ public:
   }
   static int move(Square *&undo, int pos, Square color, Square other, Square *r)
   {
-    blink();
+
 //  Serial.print(F("move "));Serial.print(pos);Serial.print(F(" "));;Serial.println(color);
   //delay(2000);
     if (r[DIR] == other) {
@@ -642,6 +645,7 @@ public:
                   undo[1] = 2 * DIR + pos;
                   undo[0] = DIR + pos;
                   undo += 6;
+    blink();
                   return 1;
                 }
               }
@@ -653,6 +657,7 @@ public:
                 undo[1] = 2 * DIR + pos;
                 undo[0] = DIR + pos;
                 undo += 5;
+    blink();
                 return 1;
               }
 
@@ -664,6 +669,7 @@ public:
               undo[1] = 2 * DIR + pos;
               undo[0] = DIR + pos;
               undo += 4;
+    blink();
               return 1;
             }
           }
@@ -673,6 +679,7 @@ public:
             undo[1] = 2 * DIR + pos;
             undo[0] = DIR + pos;
             undo += 3;
+    blink();
             return 1;
           }
         }
@@ -681,6 +688,7 @@ public:
           undo[1] = 2 * DIR + pos;
           undo[0] = DIR + pos;
           undo += 2;
+    blink();
           return 1;
         }
       }
@@ -689,6 +697,7 @@ public:
         r[DIR] = color;
         undo[0] = DIR + pos;
         undo += 1;
+    blink();
         return 1;
       }
     }
@@ -725,10 +734,9 @@ bool fast_move(Square *&undo, int pos, Square color, Square *board)
     Move<9>::move(u, pos, color, other, r) |
     Move<-9>::move(u, pos, color, other, r)))
   {
-    Square t = u-undo;
+    Square t = (Square)(u - undo);
     *u++ = t;
     *u++ = pos;
-//    Serial.print(F("Record undo at: "));Serial.print(pos); Serial.print(F(" len: "));Serial.println(u-undo);
     board[pos] = color;
     undo = u;
     return true;
@@ -750,7 +758,7 @@ bool move(Square *&undo, int pos, Square color, Square *board, const int *direct
       if (o[dir] == color) {
         if (check) return true;
         do {
-          *u++ = o - board;
+          *u++ = (Square)(o - board);
           *o = color;
           o -= dir;
         } while (o != r);
@@ -758,8 +766,7 @@ bool move(Square *&undo, int pos, Square color, Square *board, const int *direct
     }
   }
   if (u != undo) {
-    Square t =  u - undo;
-  
+    Square t = (Square)(u - undo);
     *u++ = t;
     *u++ = pos;
     board[pos] = color;
@@ -768,55 +775,79 @@ bool move(Square *&undo, int pos, Square color, Square *board, const int *direct
   }
   return false;
 }
-void dump_undos()
-{
- 
-  return;
-  Square *u = undo_buffer;
-  Serial.println(F("***Undo dump"));
-  while (u!=&undo_buffer_array[0] && u!=&undo_buffer_array[1] && u!=u!=&undo_buffer_array[-1] ){
-    Serial.print(F("undo at "));
-    Serial.print(*(--u));
-    int num = *--u;
-    Serial.print(F(" "));
-    Serial.print(num);
-    Serial.println(F(" flips"));
-    while (num-- > 0) {
-      Serial.print(F(" flip"));
-      Serial.print(*u);
-      --u;
-    }
-    Serial.println(F(""));
-  }
-  Serial.println(F("***End undo dump"));
-}
 void undo(Square *&undo, Square *board)
 {
-  if (undo_buffer == &undo_buffer_array[0]) {
-//    Serial.println(F("undo nothing"));
-    return;
-  }
-  if (undo != undo_buffer){
-//    Serial.println(F("*********************************oh shit*******************"));
-//    abort();
-  }
+  if (undo_buffer == &undo_buffer_array[0]) return;
   Square *u = undo;
-//  Serial.print(F("undo at "));
-//  Serial.println(*(u-1));
   board[*--u] = Empty;
   int num = *--u;
-//  Serial.print(num);
-//  Serial.println(F(" flips"));
   while (num-- > 0) {
-//    Serial.print(F(" flip"));
-//    Serial.println(*u);
-  
     board[*--u] ^= (White + Black);
   }
   undo = u;
 }
 
-static int8_t blacklru[1][64] = { {
+#ifdef MEGA
+static const uint8_t lru[64] = {
+    11,18,81,88,
+    13,16,38,68,86,83,61,31,
+    14,15,48,58,84,85,41,51,
+    33,34,35,36,43,44,45,46,53,54,55,56,63,64,65,66,
+    23,24,25,26,37,47,57,67,73,74,75,76,32,42,52,62,
+    12,21,17,28,78,87,82,71,
+    22,27,77,72
+  };
+ #else
+#define NUM_LRUS 7
+static uint8_t blacklru[NUM_LRUS][64] = { {
+    11,18,81,88,
+    13,16,38,68,86,83,61,31,
+    14,15,48,58,84,85,41,51,
+    33,34,35,36,43,44,45,46,53,54,55,56,63,64,65,66,
+    23,24,25,26,37,47,57,67,73,74,75,76,32,42,52,62,
+    12,21,17,28,78,87,82,71,
+    22,27,77,72
+  } ,{
+    11,18,81,88,
+    13,16,38,68,86,83,61,31,
+    14,15,48,58,84,85,41,51,
+    33,34,35,36,43,44,45,46,53,54,55,56,63,64,65,66,
+    23,24,25,26,37,47,57,67,73,74,75,76,32,42,52,62,
+    12,21,17,28,78,87,82,71,
+    22,27,77,72
+  } ,{
+    11,18,81,88,
+    13,16,38,68,86,83,61,31,
+    14,15,48,58,84,85,41,51,
+    33,34,35,36,43,44,45,46,53,54,55,56,63,64,65,66,
+    23,24,25,26,37,47,57,67,73,74,75,76,32,42,52,62,
+    12,21,17,28,78,87,82,71,
+    22,27,77,72
+  },{
+    11,18,81,88,
+    13,16,38,68,86,83,61,31,
+    14,15,48,58,84,85,41,51,
+    33,34,35,36,43,44,45,46,53,54,55,56,63,64,65,66,
+    23,24,25,26,37,47,57,67,73,74,75,76,32,42,52,62,
+    12,21,17,28,78,87,82,71,
+    22,27,77,72
+  } ,{
+    11,18,81,88,
+    13,16,38,68,86,83,61,31,
+    14,15,48,58,84,85,41,51,
+    33,34,35,36,43,44,45,46,53,54,55,56,63,64,65,66,
+    23,24,25,26,37,47,57,67,73,74,75,76,32,42,52,62,
+    12,21,17,28,78,87,82,71,
+    22,27,77,72
+  } ,{
+    11,18,81,88,
+    13,16,38,68,86,83,61,31,
+    14,15,48,58,84,85,41,51,
+    33,34,35,36,43,44,45,46,53,54,55,56,63,64,65,66,
+    23,24,25,26,37,47,57,67,73,74,75,76,32,42,52,62,
+    12,21,17,28,78,87,82,71,
+    22,27,77,72
+  } ,{
     11,18,81,88,
     13,16,38,68,86,83,61,31,
     14,15,48,58,84,85,41,51,
@@ -825,9 +856,55 @@ static int8_t blacklru[1][64] = { {
     12,21,17,28,78,87,82,71,
     22,27,77,72
   } };
-
-static int8_t whitelru[1][64] = { {
-
+static uint8_t whitelru[NUM_LRUS][64] = { {
+    11,18,81,88,
+    13,16,38,68,86,83,61,31,
+    14,15,48,58,84,85,41,51,
+    33,34,35,36,43,44,45,46,53,54,55,56,63,64,65,66,
+    23,24,25,26,37,47,57,67,73,74,75,76,32,42,52,62,
+    12,21,17,28,78,87,82,71,
+    22,27,77,72
+  } ,{
+    11,18,81,88,
+    13,16,38,68,86,83,61,31,
+    14,15,48,58,84,85,41,51,
+    33,34,35,36,43,44,45,46,53,54,55,56,63,64,65,66,
+    23,24,25,26,37,47,57,67,73,74,75,76,32,42,52,62,
+    12,21,17,28,78,87,82,71,
+    22,27,77,72
+  } ,{
+    11,18,81,88,
+    13,16,38,68,86,83,61,31,
+    14,15,48,58,84,85,41,51,
+    33,34,35,36,43,44,45,46,53,54,55,56,63,64,65,66,
+    23,24,25,26,37,47,57,67,73,74,75,76,32,42,52,62,
+    12,21,17,28,78,87,82,71,
+    22,27,77,72
+  } ,{
+    11,18,81,88,
+    13,16,38,68,86,83,61,31,
+    14,15,48,58,84,85,41,51,
+    33,34,35,36,43,44,45,46,53,54,55,56,63,64,65,66,
+    23,24,25,26,37,47,57,67,73,74,75,76,32,42,52,62,
+    12,21,17,28,78,87,82,71,
+    22,27,77,72
+  } ,{
+    11,18,81,88,
+    13,16,38,68,86,83,61,31,
+    14,15,48,58,84,85,41,51,
+    33,34,35,36,43,44,45,46,53,54,55,56,63,64,65,66,
+    23,24,25,26,37,47,57,67,73,74,75,76,32,42,52,62,
+    12,21,17,28,78,87,82,71,
+    22,27,77,72
+  } ,{
+    11,18,81,88,
+    13,16,38,68,86,83,61,31,
+    14,15,48,58,84,85,41,51,
+    33,34,35,36,43,44,45,46,53,54,55,56,63,64,65,66,
+    23,24,25,26,37,47,57,67,73,74,75,76,32,42,52,62,
+    12,21,17,28,78,87,82,71,
+    22,27,77,72
+  } ,{
     11,18,81,88,
     13,16,38,68,86,83,61,31,
     14,15,48,58,84,85,41,51,
@@ -836,29 +913,26 @@ static int8_t whitelru[1][64] = { {
     12,21,17,28,78,87,82,71,
     22,27,77,72
   } };
+#endif
+#ifndef MEGA
+  void increment_killers()
+  {
+    
+    for (int i = 1;i < 20;++i) {
+      if (whitelru[i>>1][0] != 11 && whitelru[i>>1][1] != 18) memcpy(&whitelru[(i - 1)>>1][0], &whitelru[i>>1][0], 64 * sizeof(int));
+      if (blacklru[i>>1][0] != 11 && blacklru[i>>1][1] != 18) memcpy(&blacklru[(i - 1)>>1][0], &blacklru[i>>1][0], 64 * sizeof(int));
+    }
+  }
+  void propagate_lrus()
+  {
+    for (int i = 2;i < NUM_LRUS-2;++i) {
+      if (whitelru[i>>1][0] == 11 && whitelru[i>>1][1] == 18) memcpy(&whitelru[i>>1][0], &whitelru[(i - 2)>>1][0], 64 * sizeof(int));
+      if (blacklru[i>>1][0] == 11 && blacklru[i>>1][1] == 18) memcpy(&blacklru[i>>1][0], &blacklru[(i - 2)>>1][0], 64 * sizeof(int));
+    }
+  }
+#endif
+static int depth_schedule[] = { 64,64,64,64,32,16,4,4,2,1,1,1,1,1,1,1,1,1,1,1,1,1 };
 
-
-
-static int8_t endgame_blacklru[1][64] = { {
-    11,18,81,88,
-    13,16,38,68,86,83,61,31,
-    14,15,48,58,84,85,41,51,
-    33,34,35,36,43,44,45,46,53,54,55,56,63,64,65,66,
-    23,24,25,26,37,47,57,67,73,74,75,76,32,42,52,62,
-    12,21,17,28,78,87,82,71,
-    22,27,77,72
-  } };
-
-static int8_t endgame_whitelru[1][64] = { {
-
-    11,18,81,88,
-    13,16,38,68,86,83,61,31,
-    14,15,48,58,84,85,41,51,
-    33,34,35,36,43,44,45,46,53,54,55,56,63,64,65,66,
-    23,24,25,26,37,47,57,67,73,74,75,76,32,42,52,62,
-    12,21,17,28,78,87,82,71,
-    22,27,77,72
-  } };
 
 class Board {
 public:
@@ -881,6 +955,7 @@ public:
   BoardArray board;
   void print()
   {
+    char buf[]=" ";
     int b = 0, w = 0;
     const char *p = ".*Ox#";
     Serial.println(F("     1 2 3 4 5 6 7 8"));
@@ -889,22 +964,21 @@ public:
         if (i == 0 || i == 90) Serial.print(F("   "));
         else { Serial.print(F(" "));Serial.print(i / 10);Serial.print(F(" ")); }
       }
-      Serial.write(p[board[i]]);Serial.write(' ');
+      if (board[i]>=0 && board[i]<=4) buf[0]=p[board[i]]; else Serial.print(i);
+      Serial.print(buf);Serial.print(F(" "));
       if (board[i] == Black) ++b;
       else if (board[i] == White) ++w;
-      if (i % 10 == 9) {
-        Serial.write('\n');
-        }
-      }
-
+      if (i % 10 == 9) Serial.print(F("\n"));
+    }
     Serial.print(b); Serial.print(F(" black pieces, ")); Serial.print(w); Serial.println(F(" white pieces"));
   }
 
 
-  bool collect_primary_alphabeta(int32_t collect, int32_t collect_max, int32_t * move_collection, int depth, Square color, Square root_color, bool use_move_count);
+  bool collect_primary_alphabeta(int collect, int collect_max, int * move_collection, int depth, Square color, Square root_color, bool use_move_count);
 
+  int32_t random_alphabeta(int curdepth, int &move_at, int depth, int32_t alpha, int32_t beta, Square color, Square root_color, bool use_move_count);
   int32_t alphabeta(int &move_at, int depth, int32_t alpha, int32_t beta, Square color, Square root_color, bool use_move_count);
-  int32_t movelist_alphabeta(int32_t* move_collection, int &move_at, int depth, Square color, Square root_color, bool use_move_count);
+  int32_t movelist_alphabeta(int* move_collection, int &move_at, int depth, Square color, Square root_color, bool use_move_count);
   int32_t endgame_alphabeta(int &move_at, int depth, int32_t alpha, int32_t beta, Square color, Square root_color, bool passed = false);
 
 
@@ -918,7 +992,6 @@ public:
       at = (move_number & 7) + 11 + (move_number >> 3) * 10;
       ++move_number;
     } while (!move(undo_buffer, at, color));
- //   print();
     move_at = at;
     return true;
   }
@@ -926,20 +999,24 @@ public:
 #else
   void killer2(int move_number, Square color, int depth)
   {
+ #ifndef MEGA
     if (move_number == 0) return;
-    int8_t *lru;
-    if (color == White)lru = endgame_whitelru[0];
-    else lru = endgame_blacklru[0];
+    uint8_t *lru;
+    
+    if (color == White)lru = whitelru[depth>>1];
+    else lru = blacklru[depth>>1];
     int at = lru[move_number];
     for (int i = move_number - 1;i >= 0;--i) lru[i + 1] = lru[i];
     lru[0] = at;
+ #endif   
   }
   void killer(int move_number, Square color, int depth)
   {
+ #ifndef MEGA
     if (move_number <= 1) return;
-    int8_t *lru;
-    if (color == White)lru = whitelru[0];
-    else lru = blacklru[0];
+    uint8_t *lru;
+    if (color == White)lru = whitelru[(QUIESCENT_DEPTH + depth)>>1];
+    else lru = blacklru[(QUIESCENT_DEPTH + depth)>>1];
     int at = lru[move_number];
     int a0 = lru[0];
     int a1 = lru[move_number >> 1];
@@ -947,7 +1024,9 @@ public:
     lru[0] = at;
     lru[move_number >> 1] = a0;
     lru[move_number] = a1;
+ #endif   
   }
+ #ifndef MEGA  
   void endgame_killer(int move_number, Square color, int depth)
   {
     static int32_t countdown = 100000;
@@ -956,9 +1035,9 @@ public:
       return killer2(move_number, color, depth);
     }
     if (move_number <= 1) return;
-    int8_t *lru;
-    if (color == White)lru = endgame_whitelru[0];
-    else lru = endgame_blacklru[0];
+    uint8_t *lru;
+    if (color == White)lru = whitelru[(QUIESCENT_DEPTH + depth)>>1];
+    else lru = blacklru[(QUIESCENT_DEPTH + depth)>>1];
     int at = lru[move_number];
     int a0 = lru[0];
     int a1 = lru[move_number >> 1];
@@ -966,6 +1045,34 @@ public:
     lru[0] = at;
     lru[move_number >> 1] = a0;
     lru[move_number] = a1;
+  }
+#endif
+  //initialpos a random # from 0 to 63
+  bool next_move_random(int &move_number, int &move_at, Square color, int curdepth, bool first, int initialpos, int depth)
+  {
+    if (move_number == initialpos && !first) return false;
+    int at;
+    bool skip=false;
+    do {
+      //at = (move_number >> 3) * 10 + (move_number & 7) + 11;
+      //++move_number;
+#ifndef MEGA
+      if (color == White)at = whitelru[(QUIESCENT_DEPTH + depth)>>1][move_number++];
+      else at = blacklru[(QUIESCENT_DEPTH + depth)>>1][move_number++];
+#else
+      at = lru[move_number++];
+#endif      
+      if (move_number == 64) move_number = 0;
+      if (move_number == initialpos) return false;
+      if (!first && depth_schedule[curdepth]!=64) {
+        skip = ((int32_t)(rand()>>RAND_SHIFT)*64)>(((int32_t)RAND_MAX>>RAND_SHIFT)*depth_schedule[curdepth]);
+//        std::cout << skip << std::endl;
+      }
+      if (skip) continue;
+      if (move(undo_buffer, at, color)) break;
+    } while (true);
+    move_at = at;
+    return true;
   }
 
 
@@ -977,28 +1084,46 @@ public:
       if (move_number == 64) return false;
       //at = (move_number >> 3) * 10 + (move_number & 7) + 11;
       //++move_number;
-      if (color == White)at = whitelru[0][move_number++];
-      else at = blacklru[0][move_number++];
+#ifndef MEGA
+      if (color == White)at = whitelru[(QUIESCENT_DEPTH + depth)>>1][move_number++];
+      else at = blacklru[(QUIESCENT_DEPTH + depth)>>1][move_number++];
+#else
+      at = lru[move_number++];
+#endif      
     } while (!move(undo_buffer, at, color));
     move_at = at;
     return true;
   }
+
   bool endgame_next_move(int &move_number, int &move_at, Square color, int depth)
   {
+//    Serial.print("endgame_next_move\nmove_number ");Serial.print(move_number);Serial.print(" color ");Serial.print(color);Serial.print(" depth ");Serial.println(depth);
     if (move_number > 63) return false;
     int at;
     do {
       if (move_number == 64) return false;
       //at = (move_number >> 3) * 10 + (move_number & 7) + 11;
       //++move_number;
-      if (color == White)at = endgame_whitelru[0][move_number++];
-      else at = endgame_blacklru[0][move_number++];
+#ifndef MEGA
+      if (color == White){
+        at = whitelru[(QUIESCENT_DEPTH + depth)>>1][move_number++];
+//        Serial.print("\nwhite lru");
+      }
+      else {
+        at = blacklru[(QUIESCENT_DEPTH + depth)>>1][move_number++];
+//        Serial.print("\nblack lru");
+      }
+#else
+      at = lru[move_number++];
+#endif      
+//    Serial.print(" at = ");Serial.println(at);
     } while (!move(undo_buffer, at, color));
+//    Serial.println("Move found!");
     move_at = at;
     return true;
   }
 #endif
-  bool next_move_not_in(int32_t *saved_moves, int &move_number, int &move_at, Square color, int depth)
+  bool next_move_not_in(int *saved_moves, int &move_number, int &move_at, Square color, int depth)
   {
     while (next_move(move_number, move_at, color, depth)) {
       for (int i = 1;i < *saved_moves;++i) {
@@ -1010,17 +1135,10 @@ public:
     }
     return false;
   }
-  int find_move(int depth, Square color, bool use_move_count);
+  int find_move(int depth, Square color, bool use_move_count, bool stochastic);
   bool can_move(Square color)
   {
-    blink();
-//    Serial.print(F("Can move "));
-//    Serial.println(color);
-//    delay(300);
-
     for (int p = 11;p <= 88;++p) if (move(undo_buffer, p, color, true)) return true;
-//    Serial.println(F("no moves"));
-//    delay(300);
     return false;
   }
 
@@ -1062,13 +1180,15 @@ public:
       else Serial.print(F("Black's"));
       Serial.print(F(" move (p for pass, u undo, a[n] auto, b[n] alt auto):"));
       if (command) strcpy(buf, command);
-      else { gets(buf, sizeof(buf) - 1); Serial.println(F("")); }
+      else gets(buf, sizeof(buf) - 1);
+      Serial.println("");
+
       int i = -1;
       i=atoi(buf);
       if (buf[0] == 'p') return;
 
       if (buf[0] == 'a') {
-        int m = find_move(buf[1] - '0', color, false);
+        int m = find_move(buf[1] - '0', color, false,false);
         Serial.print(F("move at "));Serial.println(m);
         if (!move(undo_buffer, m, color)) {
           Serial.println(F("pass"));
@@ -1077,8 +1197,17 @@ public:
 
       }
       if (buf[0] == 'b') {
-        int m = find_move(buf[1] - '0', color, true);
+        int m = find_move(buf[1] - '0', color, true, false);
         Serial.print(F("move at "));Serial.println( m);
+        if (!move(undo_buffer, m, color)) {
+          Serial.println(F("pass."));
+        }
+        return;
+
+      }
+      if (buf[0] == 'c') {
+        int m = find_move(buf[1] - '0', color, true,true);
+        Serial.print(F("move at "));Serial.println(m);
         if (!move(undo_buffer, m, color)) {
           Serial.println(F("pass."));
         }
@@ -1099,6 +1228,15 @@ public:
   }
 };
 
+#define NUM_PRIMARY 4
+#define NUM_PRIMARY_MAX 21
+int move_collection[NUM_PRIMARY_MAX + 1];
+int move_collection_scores[NUM_PRIMARY_MAX + 1];
+bool danger[NUM_PRIMARY_MAX + 1];
+int copy[NUM_PRIMARY_MAX + 1];
+int copy_scores[NUM_PRIMARY_MAX + 1];
+
+
 //note is singleton
 class Valuator
 {
@@ -1111,7 +1249,7 @@ public:
     /*
     int len = 3;
     for (int i = 1;i <= 8;++i) {
-    safety[i - 1] = new SafetyT[len];
+    safety[i - 1] = new Safety[len];
     memset(safety[i - 1], 0, len * sizeof(safety[i - 1][0]));
     len = len * 3;
     }
@@ -1177,7 +1315,7 @@ public:
   }
   int find_value(BoardArray in, Square root_color, bool use_move_count, bool display)
   {
-    for (int8_t i = 11;i <= 88;++i) aValuationArray[i] = 0;
+    for (int i = 11;i <= 88;++i) aValuationArray[i] = 0;
 
     CompressedBoard cbs;
     int *store_value_in_table;
@@ -1216,6 +1354,7 @@ public:
       }
       int8_t s = shifts[Valuations[i].dir];
       int8_t s2 = shifts[Valuations[1 + i].dir];
+//      assert(s >= 0);
       for (int8_t j = Valuations[i].pos + Valuations[i].dir*(Valuations[i].len - 1),
         j2 = Valuations[1 + i].pos + Valuations[1 + i].dir*(Valuations[i].len - 1),
         k = 1;k <= Valuations[i].len;++k,
@@ -1242,7 +1381,7 @@ public:
         }
         Serial.print( //aValuationArray[i],
           Values[aValuationArray[i]] + intrans[in[i]]);Serial.print(p[in[i]]);Serial.print(F(" "));
-        if (i % 10 == 9) {Serial.println(F(""));      }
+        if (i % 10 == 9) Serial.println(F(""));
       }
 
     }
@@ -1296,14 +1435,14 @@ public:
 
 
     const int8_t corner_fix2[] = { 11,18,81,88 };
-    for (int8_t i = 0;i < 4;++i) {
+    for (int i = 0;i < 4;++i) {
       if (board[corner_fix2[i]] == White) sum += 1800; else sum -= 1800;
     }
 
 
     //setup scoring
     const int8_t corner_fix4[] = { 11,12,22,21,18,17,27,28,81,71,72,82,88,78,77,87 };
-    for (int8_t i = 0;i < 16;i += 4) {
+    for (int i = 0;i < 16;i += 4) {
       if (board[corner_fix4[i]] == Empty) {
         if (corner_fix4[i + 1] == White) sum -= 450;
         else if (corner_fix4[i + 1] == White) sum += 450;
@@ -1339,13 +1478,84 @@ public:
     return sum;
   }
 
-#define NUM_PRIMARY 4
-#define NUM_PRIMARY_MAX (2*NUM_PRIMARY)
 
+  //11 12 13 14 15 16 17 18
+  //21 22 23 24 25 26 27 28
+  //31 32 33 34 35 36 37 38
+  //41 42 43 44 45 46 47 48
+  //51 52 53 54 55 56 57 58
+  //61 62 63 64 65 66 67 68
+  //71 72 73 74 75 76 77 78
+  //81 82 83 84 85 86 87 88
+
+  const int8_t side_corners[8] = { 12,21,17,28,82,71,78,87 };
+  const int8_t side_corners1[8] = { 13,31,16,38,83,61,68,86 };
+  const int8_t side_corners2[8] = { 14,41,15,48,84,51,58,85 };
+  const int8_t side_corners3[8] = { 15,51,14,58,85,41,48,84 };
+  const int8_t side_corners4[8] = { 16,61,13,68,86,31,38,83 };
+  const int8_t side_corners5[8] = { 17,71,12,78,87,21,28,82 };
+  const int8_t side_corners6[8] = { 18,81,11,88,88,11,18,81 };
+
+  const int8_t *analyse_side[6] = { side_corners1,side_corners2,side_corners3,side_corners4,side_corners5,side_corners6 };
+
+  const int8_t corners_side[8] = { 11,11,18,18,81,81,88,88 };
 
   const int8_t inner_corners[4] = { 22,27,72,77 };
   const int8_t corners[4] = { 11,18,81,88 };
-  void remove_dangerous_moves(int32_t *moves, BoardArray in, Square color)
+
+  bool move_dangerous(Square move, BoardArray in, Square color)
+  {
+    ::undo(undo_buffer, in);
+    
+    Square other = other_color(color);
+    
+    bool corners_not_taken[4] = { in[11] == Empty,in[18] == Empty,in[81] == Empty,in[88] == Empty };
+    bool inner_corners_not_taken[4] = { in[22] != color,in[27] != color,in[72] != color,in[77] != color };
+    bool side_corners_not_taken[8] = { 
+      in[12] != color,in[21] != color,in[17] != color,in[28] != color, 
+      in[78] != color,in[87] != color,in[82] != color,in[71] != color
+    };
+
+    fast_move(undo_buffer, move, color, in);
+    bool dangerous = false;
+    for (int c = 0;c < 8;++c) {
+      if (corners_not_taken[c>>1] && side_corners_not_taken[c] && in[side_corners[c]] == color && in[corners_side[c]] != color
+        ) {
+        for (int s = 0;s < 6; s++) {
+          Square p = analyse_side[s][c];
+          if (in[p] == other) return true;
+          if (in[p] == Empty) {
+            //not quite right, what if you can undo this move immediately
+            //need a pattern based one
+            if (fast_move(undo_buffer, p, other, in)) {
+              if (s < 5 && fast_move(undo_buffer, analyse_side[s + 1][c], color, in)) {
+                ::undo(undo_buffer, in);
+                ::undo(undo_buffer, in);
+                c = 7;
+                break;
+              }
+              else {
+                ::undo(undo_buffer, in);
+                return true;
+              }
+            }
+          }
+        }
+        break;
+      }
+    }
+    for (int c = 0;c < 4;++c) {
+      if (corners_not_taken[c] && inner_corners_not_taken[c] && in[inner_corners[c]] == color && in[corners[c]] != color
+        ) {
+        dangerous = true;
+        break;
+      }
+    }
+    return dangerous;
+  }
+
+
+  void remove_dangerous_moves(int *moves, BoardArray in, Square color)
   {
 
     //11 12 13 14 15 16 17 18
@@ -1361,7 +1571,6 @@ public:
     any that makes side gap is slightly dangerous - hard to test
     any that sets side to my corner is very slightly dangerous
     */
-    bool danger[NUM_PRIMARY_MAX + 1];
     bool corners_not_taken[4] = { in[11] == Empty,in[18] == Empty,in[81] == Empty,in[88] == Empty };
     bool inner_corners_not_taken[4] = { in[22] != color,in[27] != color,in[72] != color,in[77] != color };
     int count = 0;
@@ -1381,15 +1590,18 @@ public:
       danger[i] = dangerous;
     }
     if (count == 0 || count == moves[0]) return;
-    int copy[NUM_PRIMARY_MAX + 1];
 
-    for (int i = 0;i <= moves[0];++i) copy[i] = moves[i];
+    for (int i = 0;i <= moves[0];++i) {
+      copy[i] = moves[i];
+      copy_scores[i] = move_collection_scores[i];
+    }
     moves[0] = 0;
     int j = 1;
     for (int i = 1;i <= copy[0];++i)
       if (!danger[i]) {
         ++moves[0];
         moves[moves[0]] = copy[i];
+        move_collection_scores[moves[0]] = copy_scores[i];
       }
 
   }
@@ -1398,57 +1610,56 @@ public:
 Valuator valuator;
 bool in_endgame = false;
 
-int Board::find_move(int depth, Square color, bool use_move_count)
+int Board::find_move(int depth, Square color, bool use_move_count, bool stochastic)
 {
-#ifdef SIMPLE_SEARCH
-  int empty_depth = valuator.find_empty(board);
-  int moveAt = 0;
-  if (empty_depth < 19) {
-    printf(F("endgame "));
-    endgame_alphabeta(moveAt, empty_depth, -INT_MAX, INT_MAX, color, color, false);
-  }
-  else alphabeta(moveAt, depth, -INT_MAX, INT_MAX, color, color, use_move_count);
-  return moveAt;
-#else
-//Serial.println(F("before find empty"));
-  int empty_depth = valuator.find_empty(board);
-//Serial.println(F("after find empty"));
-  int moveAt = 0;
-  if (empty_depth < 13) {
-    Serial.println(F("endgame "));
-    if (in_endgame == false) {
-      in_endgame = true;
-
+  if (stochastic) {
+    int empty_depth = valuator.find_empty(board);
+    int moveAt = 0;
+    if (empty_depth < 13) {
+      Serial.print(F("endgame "));
+      endgame_alphabeta(moveAt, empty_depth, -INT_MAX, INT_MAX, color, color, false);
     }
-    endgame_alphabeta(moveAt, empty_depth, -INT_MAX, INT_MAX, color, color, false);
+    else random_alphabeta(0,moveAt, depth, -INT_MAX, INT_MAX, color, color, use_move_count);
     return moveAt;
   }
-  in_endgame = false;
-  int32_t move_collection[NUM_PRIMARY_MAX + 1];
+  else {
+    int empty_depth = valuator.find_empty(board);
+    int moveAt = 0;
+    if (empty_depth < 13) {
+      Serial.print(F("endgame "));
+      if (in_endgame == false) {
+        //propagate_lrus();
+        in_endgame = true;
 
-  // ed = 24/24  ed=26/22 ed=28/20 ed=30/18 
-  //prime the endgame refutation
-  //  int endgame_reflect = 48 - empty_depth;
-  //  if (endgame_reflect>0 ) endgame_alphabeta(moveAt, endgame_reflect, -INT_MAX, INT_MAX, color, color, false);
-//Serial.println(F("before find collect_primary_alphabeta"));
-  if (collect_primary_alphabeta(NUM_PRIMARY, NUM_PRIMARY_MAX, move_collection, depth - 2, color, color, use_move_count)) {
-//Serial.println(F("after find collect_primary_alphabeta"));
+      }
+      endgame_alphabeta(moveAt, empty_depth, -INT_MAX, INT_MAX, color, color, false);
+      return moveAt;
+    }
+    in_endgame = false;
 
-    valuator.remove_dangerous_moves(move_collection, board, color);
-    //undo(undo_buffer, board);
-    movelist_alphabeta(move_collection, moveAt, depth, color, color, use_move_count);
-    //alphabeta(moveAt, depth, -INT_MAX, INT_MAX, color, color, use_move_count);
-    return moveAt;
+    // ed = 24/24  ed=26/22 ed=28/20 ed=30/18 
+    //prime the endgame refutation
+    //  int endgame_reflect = 48 - empty_depth;
+    //  if (endgame_reflect>0 ) endgame_alphabeta(moveAt, endgame_reflect, -INT_MAX, INT_MAX, color, color, false);
+    if (collect_primary_alphabeta(NUM_PRIMARY, NUM_PRIMARY_MAX, move_collection, depth - 2, color, color, use_move_count)) {
+
+      valuator.remove_dangerous_moves(move_collection, board, color);
+      //undo(undo_buffer, board);
+      movelist_alphabeta(move_collection, moveAt, depth, color, color, use_move_count);
+      //alphabeta(moveAt, depth, -INT_MAX, INT_MAX, color, color, use_move_count);
+      return moveAt;
+    }
+    return 0;
+    //bool Board::collect_primary_alphabeta(int collect, int * move_collection, int depth, Square color, Square root_color, bool use_move_count)
+
   }
-  return 0;
-  //bool Board::collect_primary_alphabeta(int collect, int * move_collection, int depth, Square color, Square root_color, bool use_move_count)
-
-#endif
 }
 
 int32_t Board::endgame_alphabeta(int &move_at, int depth, int32_t alpha, int32_t beta, Square color, Square root_color, bool passed)
 {
   if (depth <= 0) {
+    
+//    Serial.println("endgame depth<=0");
     return valuator.find_simple_value(board, root_color);
   }
   int at, move_number = 0;
@@ -1456,12 +1667,14 @@ int32_t Board::endgame_alphabeta(int &move_at, int depth, int32_t alpha, int32_t
   if (color == root_color) { //maximizing
     int32_t v = -INT_MAX;
     while (endgame_next_move(move_number, at, color, depth)) {
+//      Serial.print("endgame move depth = ");Serial.print(depth);Serial.print(" at = ");Serial.println(at);
 
       int32_t n = endgame_alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color);
       if (n > v) {
         v = n;
         move_at = at;
-        endgame_killer(move_number - 1, color, depth);
+        killer(move_number - 1, color, depth);
+//        Serial.print("killer at depth = ");Serial.println(depth);
       }
       if (v > alpha) {
         alpha = v;
@@ -1473,7 +1686,11 @@ int32_t Board::endgame_alphabeta(int &move_at, int depth, int32_t alpha, int32_t
       }
     }
     if (v == -INT_MAX) {
-      if (passed) return valuator.find_simple_value(board, root_color);
+      if (passed) {
+        
+//        Serial.println("end by two passes");
+        return valuator.find_simple_value(board, root_color);
+      }
       move_at = 0;
       return endgame_alphabeta(inner_move, depth, alpha, beta, other_color(color), root_color, true);//passed
     }
@@ -1482,11 +1699,13 @@ int32_t Board::endgame_alphabeta(int &move_at, int depth, int32_t alpha, int32_t
   else {//minimizing
     int32_t v = INT_MAX;
     while (endgame_next_move(move_number, at, color, depth)) {
+//      Serial.print("endgame move depth = ");Serial.print(depth);Serial.print(" at = ");Serial.println(at);
       int32_t n = endgame_alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color);
       if (n < v) {
         v = n;
         move_at = at;
-        endgame_killer(move_number - 1, color, depth);
+//        Serial.print("killer at depth = ");Serial.println(depth);
+        killer(move_number - 1, color, depth);
       }
       if (v < beta) {
         beta = v;
@@ -1497,35 +1716,39 @@ int32_t Board::endgame_alphabeta(int &move_at, int depth, int32_t alpha, int32_t
       }
     }
     if (v == INT_MAX) {
-      if (passed) return valuator.find_simple_value(board, root_color);
+      if (passed) {
+//        Serial.println("end by two passes");
+        return valuator.find_simple_value(board, root_color);
+      }
       move_at = 0;
       return endgame_alphabeta(inner_move, depth, alpha, beta, other_color(color), root_color, true);//passed
     }
     move_at = at;
+    return v;
   }
 
 };
 
 
-
-bool Board::collect_primary_alphabeta(int32_t collect, int32_t collect_max, int32_t * move_collection, int depth, Square color, Square root_color, bool use_move_count)
+//damn this is an inefficient algorithm... talk about quick and dirty
+bool Board::collect_primary_alphabeta(int collect, int collect_max, int * move_collection, int depth, Square color, Square root_color, bool use_move_count)
 {
   int current_move_pos = 0;
   do {
     int32_t alpha = -INT_MAX;
     int32_t beta = INT_MAX;
+    //increment the move saving number and fill the slot with 0
     move_collection[0] = ++current_move_pos;
     move_collection[current_move_pos] = 0;
     //depth will never be zero at this level
     int at, move_number = 0;
-    int  inner_move;
+    int inner_move;
     if (color == root_color) { //maximizing
       int32_t v = -INT_MAX;
+      //next_move should work here!
       while (next_move_not_in(move_collection, move_number, at, color, depth)) {
-//dump_undos();
-//print();
+
         int32_t n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);
-//dump_undos();
         if (n > v) {
           //just take bonehead move out of the list if there's an alt
           //* 
@@ -1533,6 +1756,7 @@ bool Board::collect_primary_alphabeta(int32_t collect, int32_t collect_max, int3
           //*/
           v = n;
           move_collection[current_move_pos] = at;
+          move_collection_scores[current_move_pos] = n;
           //          killer(move_number - 1, color);
         }
         if (v > alpha) {
@@ -1546,9 +1770,7 @@ bool Board::collect_primary_alphabeta(int32_t collect, int32_t collect_max, int3
       }
       if (v == -INT_MAX) {
         //        move_collection[current_move_pos] = 0;
-// dump_undos();       
         v = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);//passed
-//dump_undos();
         continue;
       }
       continue;
@@ -1557,7 +1779,6 @@ bool Board::collect_primary_alphabeta(int32_t collect, int32_t collect_max, int3
       int32_t v = INT_MAX;
       while (next_move_not_in(move_collection, move_number, at, color, depth)) {
         int32_t n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);
-        //{}{}{} getting an extra undo somewhere
         if (n < v) {
           //just take bonehead move out of the list if there's an alt
           //*
@@ -1565,6 +1786,7 @@ bool Board::collect_primary_alphabeta(int32_t collect, int32_t collect_max, int3
           //*/
           v = n;
           move_collection[current_move_pos] = at;
+          move_collection_scores[current_move_pos] = n;
           //          killer(move_number - 1, color);
         }
         if (v < beta) {
@@ -1590,7 +1812,7 @@ bool Board::collect_primary_alphabeta(int32_t collect, int32_t collect_max, int3
   return move_collection[0] != 0;
 }
 
-int32_t Board::movelist_alphabeta(int32_t* move_collection, int &move_at, int depth, Square color, Square root_color, bool use_move_count)
+int32_t Board::movelist_alphabeta(int* move_collection, int &move_at, int depth, Square color, Square root_color, bool use_move_count)
 {
   int32_t alpha = -INT_MAX;
   int32_t beta = INT_MAX;
@@ -1601,8 +1823,9 @@ int32_t Board::movelist_alphabeta(int32_t* move_collection, int &move_at, int de
     int32_t v = -INT_MAX;
     while (++move_list_counter <= move_collection[0]) {
       at = move_collection[move_list_counter];
+//      assert(at >= 11 && at <= 88);
       bool moved = move(undo_buffer, at, color);
-//dump_undos();      
+//      assert(moved);
       int32_t n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);
       if (n > v) {
         v = n;
@@ -1628,8 +1851,9 @@ int32_t Board::movelist_alphabeta(int32_t* move_collection, int &move_at, int de
     int32_t v = INT_MAX;
     while (++move_list_counter <= move_collection[0]) {
       at = move_collection[move_list_counter];
+//      assert(at >= 11 && at <= 88);
       bool moved = move(undo_buffer, at, color);
-//dump_undos();      
+//      assert(moved);
       int32_t n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);
       if (n < v) {
         v = n;
@@ -1653,7 +1877,125 @@ int32_t Board::movelist_alphabeta(int32_t* move_collection, int &move_at, int de
   }
 
 }
+////  bool next_move_random(int &move_number, int &move_at, Square color, int curdepth, bool first, int initialpos)
 
+#define LOG(n) { Serial.print(#n);Serial.print(" ");Serial.println(n); }
+#define LOGD(d,n) { Serial.print(d);Serial.print(" ");Serial.println(n); }
+
+int32_t Board::random_alphabeta(int curdepth, int &move_at, int depth, int32_t alpha, int32_t beta, Square color, Square root_color, bool use_move_count)
+{
+  
+//  Serial.println("random_alphabeta");
+  if (depth <= 0 || end_of_game()) {
+//    Serial.println("end of game");
+    return valuator.find_value(board, root_color, use_move_count, false);
+  }
+  int inner_move;
+  bool first = true;
+  bool was_dangerous = false;
+  int initialpos=0;
+  if (depth_schedule[curdepth]!=64) {
+    
+//    int32_t r = rand();
+//    LOG(r);
+//    r>>=RAND_SHIFT;
+//    LOGD("r>>RAND_SHIFT",r);
+//    r*=64;
+//    LOGD("(r>>RAND_SHIFT)*64",r);
+//    LOGD("(((RAND_MAX>>RAND_SHIFT)+1)",(((int32_t)RAND_MAX>>RAND_SHIFT)+1));
+//    initialpos = r/(((int32_t)RAND_MAX>>RAND_SHIFT)+1);
+//    LOG(initialpos);
+    initialpos = (int32_t)(rand()>>RAND_SHIFT) * 64 / (((int32_t)RAND_MAX>>RAND_SHIFT)+1);
+  }
+  int at, move_number = initialpos;
+  if (color == root_color) { //maximizing
+    
+//    Serial.println("root color");
+    int32_t v = -INT_MAX;
+//    { Serial.print("first move "); Serial.println(initialpos); }
+    while (next_move_random(move_number, at, color, curdepth, first, initialpos,depth)) {
+//      { Serial.print("move ");Serial.print( at);Serial.print(" #");Serial.println( move_number); }
+      first = false;
+      int32_t n;
+      //{}{}{} rewrite to fill only on no cut wait would that have to be 
+      //recursive?  Needs more research
+      //      if (TranspositionEntry::find_and_fill(to_store, board, depth)) {
+      //        n = *to_store;
+      //      }
+      //      else {
+      n = random_alphabeta(curdepth+1,inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);
+      //        *to_store = n;
+      //      }
+      bool dangerous = false;
+      if (curdepth == 0) {
+        dangerous = valuator.move_dangerous(at, board, color);
+//        if (dangerous) { Serial.print( "\ndanger ");Serial.println( at);}
+        if (dangerous && v != -INT_MAX) n = v;
+      }
+      if (n > v || (was_dangerous && !dangerous)) {
+        v = n;
+        was_dangerous = dangerous;
+        move_at = at;
+//        killer(move_number - 1, color, depth);
+      }
+      if (v > alpha) {
+        alpha = v;
+      }
+
+      undo(undo_buffer, board);
+      if (beta <= alpha) {
+        break; //cut off
+      }
+    }
+    if (v == -INT_MAX) {
+      move_at = 0;
+      return random_alphabeta(curdepth + 1, inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);//passed
+    }
+    return v;
+  }
+  else {//minimizing
+//    Serial.println("other color");
+    int32_t v = INT_MAX;
+    while (next_move_random(move_number, at, color, curdepth, first, initialpos,depth)) {
+//      { Serial.print("move ");Serial.print( at);Serial.print( " #");Serial.println( move_number); }
+      first = false;
+      int32_t n;
+      //      if (TranspositionEntry::find_and_fill(to_store, board, depth)) {
+      //        n = *to_store;
+      //      }
+      //      else {
+      n = random_alphabeta(curdepth + 1, inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);
+      //        *to_store = n;
+      //      }
+      bool dangerous = false;
+      if (curdepth == 0) {
+        dangerous = valuator.move_dangerous(at, board, color);
+//        { Serial.print("\ndanger ");Serial.println( at);}
+        if (dangerous && v != INT_MAX) n = v;
+      }
+      if (n < v || (was_dangerous && !dangerous)) {
+        v = n;
+        was_dangerous = dangerous;
+        move_at = at;
+//        killer(move_number - 1, color, depth);
+      }
+      if (v < beta) {
+        beta = v;
+      }
+      undo(undo_buffer, board);
+      if (beta <= alpha) {
+        break; //cut off
+      }
+    }
+    if (v == INT_MAX) {
+      move_at = 0;
+      return random_alphabeta(curdepth + 1, inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);//passed
+    }
+    move_at = at;
+    return v;
+  }
+
+}
 
 int32_t Board::alphabeta(int &move_at, int depth, int32_t alpha, int32_t beta, Square color, Square root_color, bool use_move_count)
 {
@@ -1662,17 +2004,14 @@ int32_t Board::alphabeta(int &move_at, int depth, int32_t alpha, int32_t beta, S
 #else
   if (depth <= 0 || end_of_game()) {
 #endif
-    return valuator.find_value(board, root_color, use_move_count, false);//display
+    return valuator.find_value(board, root_color, use_move_count, false);
   }
   int at, move_number = 0;
   int inner_move;
   if (color == root_color) { //maximizing
     int32_t v = -INT_MAX;
     while (next_move(move_number, at, color, depth)) {
-dump_undos();
-//Serial.print(F("alphabeta "));Serial.println(depth);
-//    print();
-      int32_t *to_store, n;
+      int32_t n;
       //{}{}{} rewrite to fill only on no cut wait would that have to be 
       //recursive?  Needs more research
       //      if (TranspositionEntry::find_and_fill(to_store, board, depth)) {
@@ -1680,7 +2019,6 @@ dump_undos();
       //      }
       //      else {
       n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);
-//dump_undos();
       //        *to_store = n;
       //      }
       if (n > v) {
@@ -1706,16 +2044,12 @@ dump_undos();
   else {//minimizing
     int32_t v = INT_MAX;
     while (next_move(move_number, at, color, depth)) {
-//Serial.print(F("alphabeta "));Serial.println(depth);
-//    print();
-//dump_undos();
-      int32_t *to_store, n;
+      int32_t n;
       //      if (TranspositionEntry::find_and_fill(to_store, board, depth)) {
       //        n = *to_store;
       //      }
       //      else {
       n = alphabeta(inner_move, depth - 1, alpha, beta, other_color(color), root_color, use_move_count);
-//dump_undos();
       //        *to_store = n;
       //      }
       if (n < v) {
@@ -1741,18 +2075,18 @@ dump_undos();
 
   }
 
-
-
 void setup() 
 {
   pinMode(13, OUTPUT);  
-  Serial.begin(9600);
+  Serial.begin(250000);
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 
   Serial.println(F("Hello World"));
-
+  Serial.println(RAND_MAX>>RAND_SHIFT);
+  srand(analogRead(0));
+  //srand(7043);
   Board b;
   Serial.println(F("board"));
   
@@ -1761,28 +2095,28 @@ void setup()
   do {
     if (!b.can_move(Black)) {
       if (white_passed) {
-        Serial.println("game over");
+        Serial.println(F("game over"));
         break;
       }
-      Serial.println("Black must pass");
+      Serial.println(F("Black must pass"));
       black_passed = true;
     }
       else {
-        b.input(Black, "b6");
+        b.input(Black, "c9");
       black_passed = false;
     }
     //increment_killers();
 //    valuator.find_value(b.board, White,false, true);
     if (!b.can_move(White)) {
       if (black_passed) {
-        Serial.println("game over");
+        Serial.println(F("game over"));
         break;
       }
-      Serial.println("White must pass");
+      Serial.println(F("White must pass"));
       white_passed = true;
     }
     else {
-      b.input(White);
+      b.input(White,"b7");
       white_passed = false;
     }
     //increment_killers();
