@@ -4,6 +4,16 @@
 
 #define INT_MAX 2147483647
 
+#ifdef MEGA
+static int depth_schedule[] = { 64,64,32,16,4,4,2,1,1,1,1,1,1,1,1,1,1,1,1,1 };
+#define PLAY "c7"
+#define ENDGAME 13
+#else
+static int depth_schedule[] = { 64,64,64,64,32,16,4,4,2,1,1,1,1,1,1,1,1,1,1,1,1,1 };
+#define PLAY "c9"
+#define ENDGAME 15
+#endif
+
 // consolegame.cpp : Defines the entry point for the console application.
 //
 
@@ -932,7 +942,6 @@ void propagate_lrus()
   }
 }
 #endif
-static int depth_schedule[] = { 64,64,64,64,32,16,4,4,2,1,1,1,1,1,1,1,1,1,1,1,1,1 };
 
 
 class Board {
@@ -1218,8 +1227,7 @@ public:
 
       if (buf[0] == 'u') {
         undo(undo_buffer, board);
-
-        return;
+        undo(undo_buffer, board);
       }
       if (i < 11 || i>99 || !move(undo_buffer, i, color)) {
         Serial.println(F("bad move."));
@@ -1383,27 +1391,27 @@ public:
 
     //setup scoring
     const int8_t corner_fix4[] = { 11,12,22,21,18,17,27,28,81,71,72,82,88,78,77,87 };
-    for (int8_t i = 0;i < 16;i += 4) {
+    for (int i = 0;i < 16;i += 4) {
       if (board[corner_fix4[i]] == Empty) {
-        if (corner_fix4[i + 1] == White) sum -= 450;
-        else if (corner_fix4[i + 1] == White) sum += 450;
+        if (board[corner_fix4[i + 1]] == White) sum -= 450;
+        else if (board[corner_fix4[i + 1]] == Black) sum += 450;
         else {
-          if (fast_move_check(corner_fix4[i + 1], White, board)) sum -= 160;
-          if (fast_move_check(corner_fix4[i + 1], Black, board)) sum += 160;
+          if (fast_move_check(corner_fix4[i + 1], White, board)) sum -= 50;
+          if (fast_move_check(corner_fix4[i + 1], Black, board)) sum += 50;
         }
 
-        if (corner_fix4[i + 3] == White) sum -= 450;
-        else if (corner_fix4[i + 3] == White) sum += 450;
+        if (board[corner_fix4[i + 3]] == White) sum -= 450;
+        else if (board[corner_fix4[i + 3]] == Black) sum += 450;
         else {
-          if (fast_move_check(corner_fix4[i + 3], White, board)) sum -= 160;
-          if (fast_move_check(corner_fix4[i + 3], Black, board)) sum += 160;
+          if (fast_move_check(corner_fix4[i + 3], White, board)) sum -= 50;
+          if (fast_move_check(corner_fix4[i + 3], Black, board)) sum += 50;
         }
 
-        if (corner_fix4[i + 2] == White) sum -= 800;
-        else if (corner_fix4[i + 2] == White) sum += 800;
+        if (board[corner_fix4[i + 2]] == White) sum -= 800;
+        else if (board[corner_fix4[i + 2]] == Black) sum += 800;
         else {
-          if (fast_move_check(corner_fix4[i + 2], White, board)) sum -= 500;
-          if (fast_move_check(corner_fix4[i + 2], Black, board)) sum += 500;
+          if (fast_move_check(corner_fix4[i + 2], White, board)) sum -= 300;
+          if (fast_move_check(corner_fix4[i + 2], Black, board)) sum += 300;
         }
       }
     }
@@ -1549,27 +1557,27 @@ public:
 
     //setup scoring
     const int8_t corner_fix4[] = { 11,12,22,21,18,17,27,28,81,71,72,82,88,78,77,87 };
-    for (int8_t i = 0;i < 16;i += 4) {
+    for (int i = 0;i < 16;i += 4) {
       if (board[corner_fix4[i]] == Empty) {
-        if (corner_fix4[i + 1] == White) sum -= 450;
-        else if (corner_fix4[i + 1] == White) sum += 450;
+        if (board[corner_fix4[i + 1]] == White) sum -= 450;
+        else if (board[corner_fix4[i + 1]] == Black) sum += 450;
         else {
-          if (fast_move_check(corner_fix4[i + 1], White, board)) sum -= 160;
-          if (fast_move_check(corner_fix4[i + 1], Black, board)) sum += 160;
+          if (fast_move_check(corner_fix4[i + 1], White, board)) sum -= 50;
+          if (fast_move_check(corner_fix4[i + 1], Black, board)) sum += 50;
         }
 
-        if (corner_fix4[i + 3] == White) sum -= 450;
-        else if (corner_fix4[i + 3] == White) sum += 450;
+        if (board[corner_fix4[i + 3]] == White) sum -= 450;
+        else if (board[corner_fix4[i + 3]] == Black) sum += 450;
         else {
-          if (fast_move_check(corner_fix4[i + 3], White, board)) sum -= 160;
-          if (fast_move_check(corner_fix4[i + 3], Black, board)) sum += 160;
+          if (fast_move_check(corner_fix4[i + 3], White, board)) sum -= 50;
+          if (fast_move_check(corner_fix4[i + 3], Black, board)) sum += 50;
         }
 
-        if (corner_fix4[i + 2] == White) sum -= 800;
-        else if (corner_fix4[i + 2] == White) sum += 800;
+        if (board[corner_fix4[i + 2]] == White) sum -= 800;
+        else if (board[corner_fix4[i + 2]] == Black) sum += 800;
         else {
-          if (fast_move_check(corner_fix4[i + 2], White, board)) sum -= 500;
-          if (fast_move_check(corner_fix4[i + 2], Black, board)) sum += 500;
+          if (fast_move_check(corner_fix4[i + 2], White, board)) sum -= 300;
+          if (fast_move_check(corner_fix4[i + 2], Black, board)) sum += 300;
         }
       }
     }
@@ -1624,7 +1632,10 @@ bool move_dangerous(Square move, BoardArray in, Square color)
     in[78] != color,in[87] != color,in[82] != color,in[71] != color
   };
 
+  int8_t num_corners_takeable_before =  (fast_move_check(11, other, in)?1:0) + (fast_move_check(18, other, in) ? 1 : 0) + (fast_move_check(81, other, in) ? 1 : 0) + (fast_move_check(88, other, in) ? 1 : 0);
   fast_move(undo_buffer, move, color, in);
+  int8_t num_corners_takeable_after = (fast_move_check(11, other, in)?1:0) + (fast_move_check(18, other, in) ? 1 : 0) + (fast_move_check(81, other, in) ? 1 : 0) + (fast_move_check(88, other, in) ? 1 : 0);
+  if (num_corners_takeable_after > num_corners_takeable_before) return true;
   bool dangerous = false;
   for (int c = 0;c < 8;++c) {
     if (corners_not_taken[c >> 1] && side_corners_not_taken[c] && in[side_corners[c]] == color && in[corners_side[c]] != color
@@ -1723,7 +1734,7 @@ int Board::find_move(int depth, Square color, bool use_move_count, bool stochast
   int empty_depth = valuator.find_empty(board);
   if (stochastic) {
     int moveAt = 0;
-    if (empty_depth < 15) {
+    if (empty_depth < ENDGAME) {
       Serial.print(F("endgame "));
       endgame_alphabeta(moveAt, empty_depth, -INT_MAX, INT_MAX, color, color, false);
     }
@@ -1732,7 +1743,7 @@ int Board::find_move(int depth, Square color, bool use_move_count, bool stochast
   }
   else {
     int moveAt = 0;
-    if (empty_depth < 13) {
+    if (empty_depth < ENDGAME) {
       Serial.print(F("endgame "));
       if (in_endgame == false) {
         //propagate_lrus();
@@ -2209,7 +2220,7 @@ void setup()
       black_passed = true;
     }
     else {
-      b.input(Black, "c9");
+      b.input(Black, PLAY);
       black_passed = false;
     }
     //increment_killers();
